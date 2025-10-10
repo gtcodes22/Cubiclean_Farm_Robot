@@ -8,4 +8,6 @@ Spencer Jones
 Rameez Shiekh
 Gideon Tladi
 
-![System Diagram](https://github.com/gtcodes22/Cubiclean_Farm_Robot/system-diagram.png)
+![System Diagram](./system-diagram.png)
+
+<img src="./system-diagram.png" alt=" System Diagram">
