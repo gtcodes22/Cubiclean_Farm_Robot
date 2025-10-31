@@ -5,19 +5,70 @@ void main() => runApp(const MyApp()); // run MyApp as the main program
 // ignore: avoid_print
 void testClick() => print('Click');
 
-//@Preview(name: 'TCP Messages') 
-Widget tcpMessages() {
-  return ListView(
-    padding: const EdgeInsets.all(8),
-    children: <Widget>[
-      Container(
+class NetworkMessages extends StatefulWidget {
+  const NetworkMessages({super.key});
+
+  @override
+  State<NetworkMessages> createState() => _NetworkMessagesState();
+}
+
+class _NetworkMessagesState extends State<NetworkMessages> with ChangeNotifier {
+  final myController = TextEditingController();
+  List messages = ["test"];
+
+  //static void clear() => messages = [];
+
+  void add(String msg) {
+    //setState(() { messages.add(msg); } );
+    messages.add(msg);
+    notifyListeners();
+  }
+
+  void sendButtonPressed() {
+    testClick();
+    add(myController.text);
+    myController.clear();
+  }
+  TextEditingController getController() => myController;
+
+  Widget formatMessage(String message) {
+    return Container(
         height: 50,
         color: Colors.amber[600],
-        child: const Center(child: Text('Entry A')),
-      ),
-    ],
-  );
+        child: Center(child: Text(message)),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> widgetChildren = [];
+    int numberOfMessages = messages.length;
+
+    for (int i = 0; i < numberOfMessages; i++) {
+      widgetChildren.add(formatMessage(messages[i]));
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(8),
+      children: widgetChildren,
+    );
+  }
+
+  @override
+  void dispose() {
+    myController.dispose();
+    super.dispose();
+  }
 }
+
+
+
+/*
+//@Preview(name: 'TCP Messages') 
+Widget tcpMessages() {
+  NetworkMesssages.build();
+}
+*/
 
 Widget networkMessenger() {
     return MaterialApp(
@@ -25,7 +76,7 @@ Widget networkMessenger() {
         appBar: AppBar(title: const Text('Farm Bot Data Viewer'),),
         body: Column(
           children: [
-            Expanded(child: tcpMessages()),
+            Expanded(child: NetworkMessages()),
             Padding(
               padding: EdgeInsets.all(8),
               child: Row(
@@ -33,13 +84,14 @@ Widget networkMessenger() {
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: MyApp.netMsgState.getController(),
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter message to send to server'
+                      border: OutlineInputBorder(),
+                      hintText: 'Enter message to send to server'
                       ),
                     )
                   ),
-                  ElevatedButton(onPressed: testClick, child: const Text('Send')),
+                  ElevatedButton(onPressed: MyApp.netMsgState.sendButtonPressed, child: const Text('Send')),
                 ],
               ),
             ),
@@ -51,6 +103,8 @@ Widget networkMessenger() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
+  static final netMsgState = _NetworkMessagesState();
 
   // This widget is the root of your application.
   @override
