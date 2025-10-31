@@ -4,7 +4,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-const hostname = '0.0.0.0'; // Binds to all adapters
+//external InternetAddress get anyIPv4;
+
+const hostname = '127.0.0.1';//'0.0.0.0'; // Binds to all adapters
 const port = 8000;
 
 Future<void> startServer() async {
