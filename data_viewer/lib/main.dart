@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'dart:async';
+
 
 void main() => runApp(const MyApp()); // run MyApp as the main program
 
@@ -8,7 +12,6 @@ void testClick() => print('Click');
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  
   // This widget is the root of your application.
   @override
   StatefulWidget build(BuildContext context) {
@@ -65,7 +68,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-
 class MyNetworkPage extends StatefulWidget {
   const MyNetworkPage({super.key, required this.title});
   
@@ -80,8 +82,10 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
   List messages = [];
   int _counter = 0;
 
+  // from: https://stackoverflow.com/questions/69464611/how-can-i-connect-to-tcp-socket-not-web-socket-in-flutter
+  var _channel = Null;
+
   Widget _formatMessage(String message) {
-    
     String src = message.startsWith("@PC") ? "[PC] → " : "[APP] → ";
     String des = message.endsWith("@PC") ? "[PC] " : "[APP] ";
 
