@@ -3,6 +3,12 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
+import 'socket_service.dart';
+
+/** DO NOT RUN THIS PROGRAM VIA THE WEB APP DEBUGGER, AS THE DART:IO LIBRARY
+ * IS NOT COMPATIBLE.
+ */
+
 
 void main() => runApp(const MyApp()); // run MyApp as the main program
 
@@ -75,15 +81,77 @@ class MyNetworkPage extends StatefulWidget {
 
   @override
   State<MyNetworkPage> createState() => _MyNetworkPageState();
+
+  void addMsg(String message) {
+    _MyNetworkPageState()._addMsg(netMsg: message);
+  }
+
 }
 
 class _MyNetworkPageState extends State<MyNetworkPage> {
+  //late Socket _socket;
+  //bool isConnected = false;
   final myController = TextEditingController();
+  final addrTextController = TextEditingController();
   List messages = [];
+  List<String> recMessages = [];
   int _counter = 0;
 
   // from: https://stackoverflow.com/questions/69464611/how-can-i-connect-to-tcp-socket-not-web-socket-in-flutter
-  var _channel = Null;
+  // from: https://docs.flutter.dev/cookbook/networking/web-sockets#complete-example
+  /*
+  // ignore: non_constant_identifier_names
+  void _connectToServer(String IP, int port) async {
+    _socket = await Socket.connect(IP, port);
+    // from: https://stackoverflow.com/questions/72789853/how-to-check-if-the-tcp-socket-is-still-connected-in-flutter
+    isConnected = true;
+    
+    //
+  }
+
+  // get contents of connect text and convert it into an ip address and port
+  void _serverConnect() {
+    List<String> word = addrTextController.text.split(":");
+    String ipAddr = word[0];
+    int port = int.parse(word[1]);
+    print('connecting to ' + ipAddr + ":" + port.toString());
+    _connectToServer(ipAddr, port);
+  }
+
+  void _getMessages() async {
+    String msg;
+
+    // listen to the received data event stream
+    _socket.listen((List<int> event) {
+      msg = utf8.decode(event);
+      print("got: " + msg);
+      _addMsg(netMsg: msg);
+      return;
+    });
+  }
+  
+  void _sendMessage(String msg) async {
+    _socket.add(utf8.encode(msg));
+    _socket.flush();
+  }
+
+  void _disconnectFromServer() async {
+      _socket.close();
+  }
+  */
+
+  void _getMessage() {
+    String msg = recMessages[0];
+    recMessages.remove(0);
+    _addMsg(netMsg:msg);
+  }
+
+  void _sendMessage(String msg) async {
+  }
+
+  void _serverConnect() async {
+    SocketService().initializeSocket(recMessages, _getMessage);
+  }
 
   Widget _formatMessage(String message) {
     String src = message.startsWith("@PC") ? "[PC] → " : "[APP] → ";
@@ -102,13 +170,19 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
     });
   }
 
-  void _addMsg() {
-    testClick();
-    if (myController.text == "") { return; }
+  void _addMsg({String netMsg = ""}) {
+    String msg;
+    
+    if (netMsg == "") {testClick();}
+    if (myController.text == "" && netMsg == "") { return; }
 
-    setState(() { 
-      String msg = _counter.toString() + ": " + myController.text;
-      myController.clear();
+    setState(() {
+      if (netMsg != "") {
+        msg = _counter.toString() + ": " + netMsg;
+      } else {
+        msg = _counter.toString() + ": " + myController.text;
+        myController.clear();
+      }
       messages.add(msg);
       _incrementCounter();
     });
@@ -155,6 +229,29 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
                   )
                 ),
                 ElevatedButton(onPressed: _addMsg, child: const Text('Send')),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: Row(
+              spacing: 20,
+              children: [
+                ElevatedButton(onPressed: _getMessages, child: const Text('Refresh')),
+                Expanded(
+                  child: Form(
+                    child: TextFormField(
+                      // https://stackoverflow.com/questions/72153633/flutter-submit-textformfield-on-enter
+                      onFieldSubmitted: (value) { _serverConnect(); },
+                      controller: addrTextController,
+                      decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Server IP:Port',
+                      ),
+                    ),
+                  )
+                ),
+                ElevatedButton(onPressed: _serverConnect, child: const Text('Connect')),
               ],
             ),
           ),
