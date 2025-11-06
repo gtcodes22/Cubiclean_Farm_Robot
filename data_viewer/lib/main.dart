@@ -141,26 +141,38 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
   */
 
   void _getMessage() {
-    String msg = recMessages[0];
-    recMessages.remove(0);
-    _addMsg(netMsg:msg);
+    while (recMessages.isNotEmpty) { _addMsg(netMsg:recMessages.removeLast()); }
   }
 
   void _sendMessage(String msg) async {
+    SocketService.sendMessage(msg);
   }
 
   void _serverConnect() async {
-    SocketService().initializeSocket(recMessages, _getMessage);
+    SocketService().initializeSocket(addrTextController.text, recMessages, _getMessage);
   }
 
-  Widget _formatMessage(String message) {
-    String src = message.startsWith("@PC") ? "[PC] → " : "[APP] → ";
-    String des = message.endsWith("@PC") ? "[PC] " : "[APP] ";
+  Widget _formatMessage(String _message, int i) {
+    String src = _message.substring(0, _message.indexOf(':'));
+    String message = _message.substring(_message.indexOf(':') + 1);
+    //String des = message.endsWith("@PC") ? "[PC] " : "[APP] ";
+    var mColour = Colors.amber[600];
+
+    switch (src) {
+      case 'PC':
+        mColour = const Color.fromARGB(255, 0, 208, 255);
+        break;
+      case 'RPI':
+        mColour = const Color.fromARGB(255, 255, 0, 102);
+        break;
+      default:
+        mColour = Colors.amber[600];
+    }
 
     return Container(
         height: 50,
-        color: Colors.amber[600],
-          child: Center(child: Text(src + des + message)),
+        color: mColour,
+          child: Center(child: Text(i.toString() + ": " + message)),
       );
   }
 
@@ -173,17 +185,22 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
   void _addMsg({String netMsg = ""}) {
     String msg;
     
-    if (netMsg == "") {testClick();}
     if (myController.text == "" && netMsg == "") { return; }
 
+    // add counter to message 
     setState(() {
       if (netMsg != "") {
-        msg = _counter.toString() + ": " + netMsg;
+        msg = 'PC:' + netMsg;
       } else {
-        msg = _counter.toString() + ": " + myController.text;
+        msg = 'APP:' + myController.text;
         myController.clear();
+        _sendMessage(msg);
+
+        testClick();
       }
+      // add message to message log widget
       messages.add(msg);
+      
       _incrementCounter();
     });
   }
@@ -194,7 +211,7 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
     int numberOfMessages = messages.length;
 
     for (int i = 0; i < numberOfMessages; i++) {
-      widgetChildren.add(_formatMessage(messages[i]));
+      widgetChildren.add(_formatMessage(messages[i], i));
     }
 
     Widget NetMsg = ListView(
@@ -237,7 +254,7 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
             child: Row(
               spacing: 20,
               children: [
-                ElevatedButton(onPressed: _getMessages, child: const Text('Refresh')),
+                ElevatedButton(onPressed: _getMessage, child: const Text('Refresh')),
                 Expanded(
                   child: Form(
                     child: TextFormField(
