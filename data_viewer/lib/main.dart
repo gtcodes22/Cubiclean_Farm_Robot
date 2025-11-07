@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
@@ -32,7 +33,7 @@ class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
   
   final String title;
-
+  
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -78,6 +79,7 @@ class MyNetworkPage extends StatefulWidget {
   const MyNetworkPage({super.key, required this.title});
   
   final String title;
+  static const testImage = Image(image: AssetImage('test.bmp'),);
 
   @override
   State<MyNetworkPage> createState() => _MyNetworkPageState();
@@ -227,6 +229,10 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
       body: Column(
         children: [
           Expanded(child: NetMsg),
+          const Image(
+            image: AssetImage('test.bmp'),
+            scale:
+          ),
           Padding(
             padding: EdgeInsets.all(8),
             child: Row(
