@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:data_viewer/common/build/app_build_timestamp.g.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key, required this.title});
@@ -9,13 +10,8 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPage extends State<AboutPage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+    final String sDate = DateTime.fromMillisecondsSinceEpoch(
+      lastAppBuildTimestamp).toString();
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +24,8 @@ class _AboutPage extends State<AboutPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('App Version 0.1.0'),  // update this each revision
-            const Text('Commit Time: 2025-11-21 5:44pm'),  // update this each revision
+            const Text('App Version 0.1.1'),  // update this each revision
+            Text('Build Time: $sDate (UK timezone)'),
             const Text('Written by: Jade Cawley'),
           ],
         ),

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'dart:convert';
-import 'dart:async';
+//import 'dart:io';
+//import 'dart:convert';
+//import 'dart:async';
 
 import 'socket_service.dart';
 import 'pages/network_page.dart';
 import 'pages/test_page.dart';
 import 'pages/about_page.dart';
 
-/// DO NOT RUN THIS PROGRAM VIA THE WEB APP DEBUGGER, AS THE DART:IO LIBRARY
-/// IS NOT COMPATIBLE.
+/// DO NOT RUN THIS PROGRAM VIA THE WEB APP DEBUGGER, AS THE DART:IO
+/// LIBRARY IS NOT COMPATIBLE.
 
 void main() => runApp(const MyApp()); // run MyApp as the main program
 
@@ -29,19 +29,38 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-  
   final String title;
-  
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
   int pageIndex = 0;
+  int numberOfMessages = 0;
+
+  // any messages sent to/from the app
+  List<String> netMessages = [];
+  String addr = "";
+  var attemptConnect = false;
+
+  void _serverConnect(String addr) async {
+    SocketService().initializeSocket(addr, netMessages, _newMessage);
+  }
+
+  // gets called whenever there's a new network message
+  void _newMessage(String newMessage) {
+    setState(() {
+      numberOfMessages++;
+      netMessages.add(newMessage);
+    });
+  }
 
   /// The following code is adapted from one of the flutter tutorials
   @override
   Widget build(BuildContext context) {
+    // This switches which page to display based on the page index, which
+    // the Navigation Rail changes
     Widget page;
     switch (pageIndex) {
       case 0:
@@ -49,7 +68,9 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         page = TestPage(title: 'Bed Health Inspector');
       case 2:
-        page = MyNetworkPage(title: 'Network Debug Function');
+        page = MyNetworkPage(title: 'Network Debug Function',
+          addrChange: _serverConnect,
+          netMessages : netMessages);
       case 3:
         page = TestPage(title: 'Test Page');
       case 4:
@@ -58,7 +79,10 @@ class _MyHomePageState extends State<MyHomePage> {
         throw UnimplementedError('no widget for $pageIndex');
     }
 
-   return LayoutBuilder(
+    // This adds a Navigation Rail widget to the app, which is displayed on
+    // all pages. It allows the user to select which 'page' of the app to
+    // display 
+    return LayoutBuilder(
       builder: (context,constraints) {
         return Scaffold(
           body: Row(
@@ -96,6 +120,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                 ),
               ),
+              // Displays page widget in space not used by the Navigation
+              // rail.
               Expanded(
                 child: Container(
                   color: Theme.of(context).colorScheme.primaryContainer,

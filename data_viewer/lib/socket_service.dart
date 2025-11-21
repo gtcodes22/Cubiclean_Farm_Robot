@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'dart:async';
+//import 'dart:async';
 
 class SocketService {
   static bool isConnected = false;
@@ -10,7 +10,7 @@ class SocketService {
   static Socket? getSocket() => _socket;
   static bool connected() => isConnected;
 
-  void initializeSocket(String ipPort, List<String> recMessages, VoidCallback getMessage) async {
+  void initializeSocket(String ipPort, List<String> netMessages, ValueChanged<String> newMessage) async {
   // Configure the socket connection
     
     var address = InternetAddress.loopbackIPv4;
@@ -30,13 +30,14 @@ class SocketService {
       (dynamic message) {
         // from: https://stackoverflow.com/questions/28565242/convert-uint8list-to-string-with-dart
         String sMessage = String.fromCharCodes(message);
-        debugPrint("Recieved message: " + sMessage);
+        debugPrint("Recieved message: $sMessage");
 
         // add incoming message to the received messages list
-        recMessages.add(sMessage);
+        //netMessages.add(sMessage);
 
         // calling this updates the NetworkPageState with the new received message
-        getMessage();
+        //getMessage();
+        newMessage(sMessage);
       },
       onDone: () {
         isConnected = false;

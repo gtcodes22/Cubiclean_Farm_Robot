@@ -1,13 +1,21 @@
+//import 'package:data_viewer/main.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../socket_service.dart';
 
 // Simple test function to check a widget is working as intended.
-// ignore: avoid_print
-void testClick() => print('Click');
+void testClick() {
+  if (kDebugMode) {debugPrint('Click');}
+}
 
 class MyNetworkPage extends StatefulWidget {
-  const MyNetworkPage({super.key, required this.title});
   final String title;
+  final ValueChanged<String> addrChange;
+  final List<String> netMessages;
+  const MyNetworkPage({
+    super.key, required this.title, required this.addrChange,
+    required this.netMessages
+  });
 
   static const testImage = Image(image: AssetImage('test.bmp'),);
 
@@ -25,14 +33,12 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
   //bool isConnected = false;
   final myController = TextEditingController();
   final addrTextController = TextEditingController();
-  static List messages = [];
-  List<String> recMessages = [];
-  int _counter = 0;
+  //static List messages = [];
 
   // from: https://stackoverflow.com/questions/69464611/how-can-i-connect-to-tcp-socket-not-web-socket-in-flutter
   // from: https://docs.flutter.dev/cookbook/networking/web-sockets#complete-example
   /*
-  // ignore: non_constant_identifier_names
+  
   void _connectToServer(String IP, int port) async {
     _socket = await Socket.connect(IP, port);
     // from: https://stackoverflow.com/questions/72789853/how-to-check-if-the-tcp-socket-is-still-connected-in-flutter
@@ -72,21 +78,34 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
   }
   */
 
+  /*
   void _getMessage() {
-    while (recMessages.isNotEmpty) { _addMsg(netMsg:recMessages.removeLast()); }
+    //while (netMessages.isNotEmpty) { _addMsg(netMsg:netMessages.removeLast()); }
+    for (int i = 0; i < widget.netMessages.length; i++) {
+      _addMsg(netMsg: widget.netMessages[i]);
+    }
   }
+  */
 
   void _sendMessage(String msg) async {
     SocketService.sendMessage(msg);
   }
 
-  void _serverConnect() async {
-    SocketService().initializeSocket(addrTextController.text, recMessages, _getMessage);
+  void _serverConnect() {
+    //SocketService().initializeSocket(addrTextController.text), widget.netMessages);
+    //widget.parent.widget.serverConnect(addrTextController.text);
+    widget.addrChange(addrTextController.text);
   }
 
-  Widget _formatMessage(String _message, int i) {
-    String src = _message.substring(0, _message.indexOf(':'));
-    String message = _message.substring(_message.indexOf(':') + 1);
+  Widget _formatMessage(String origMessage, int i) {
+    String src;
+    try {
+      src = origMessage.substring(0, origMessage.indexOf(':')); 
+    } on RangeError catch (_) {
+      src = 'PC';
+    }
+
+    String message = origMessage.substring(origMessage.indexOf(':') + 1);
     //String des = message.endsWith("@PC") ? "[PC] " : "[APP] ";
     var mColour = Colors.amber[600];
 
@@ -104,14 +123,8 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
     return Container(
         height: 50,
         color: mColour,
-          child: Center(child: Text(i.toString() + ": " + message)),
+          child: Center(child: Text("$i : $message")),
       );
-  }
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
   }
 
   void _addMsg({String netMsg = ""}) {
@@ -122,31 +135,31 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
     // add counter to message 
     setState(() {
       if (netMsg != "") {
-        msg = 'PC:' + netMsg;
+        msg = 'PC:$netMsg';
       } else {
-        msg = 'APP:' + myController.text;
+        msg = 'APP:${myController.text}';
         myController.clear();
         _sendMessage(msg);
-
         testClick();
       }
-      // add message to message log widget
-      messages.add(msg);
-      
-      _incrementCounter();
+
+      // add message to message log widget and update widget
+      setState(() {
+         widget.netMessages.add(msg);
+       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     List<Widget> widgetChildren = [];
-    int numberOfMessages = messages.length;
+    int numberOfMessages = widget.netMessages.length;
 
     for (int i = 0; i < numberOfMessages; i++) {
-      widgetChildren.add(_formatMessage(messages[i], i));
+      widgetChildren.add(_formatMessage(widget.netMessages[i], i));
     }
 
-    Widget NetMsg = ListView(
+    Widget netMsg = ListView(
       padding: const EdgeInsets.all(8),
       children: widgetChildren,
     );
@@ -158,7 +171,7 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
       ),
       body: Column(
         children: [
-          Expanded(child: NetMsg),
+          Expanded(child: netMsg),
           const Image(
             image: AssetImage('test.bmp'),
           ),
@@ -189,7 +202,7 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
             child: Row(
               spacing: 20,
               children: [
-                ElevatedButton(onPressed: _getMessage, child: const Text('Refresh')),
+                //ElevatedButton(onPressed: _getMessage, child: const Text('Refresh')),
                 Expanded(
                   child: Form(
                     child: TextFormField(
@@ -211,31 +224,4 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
       )
     );
   }
-    
-    /*
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-  */
 }
