@@ -1,30 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
 import 'socket_service.dart';
+import 'pages/network_page.dart';
+import 'pages/test_page.dart';
+import 'pages/about_page.dart';
 
-/** DO NOT RUN THIS PROGRAM VIA THE WEB APP DEBUGGER, AS THE DART:IO LIBRARY
- * IS NOT COMPATIBLE.
- */
-
+/// DO NOT RUN THIS PROGRAM VIA THE WEB APP DEBUGGER, AS THE DART:IO LIBRARY
+/// IS NOT COMPATIBLE.
 
 void main() => runApp(const MyApp()); // run MyApp as the main program
-
-// ignore: avoid_print
-void testClick() => print('Click');
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  // This widget is the root of the application.
   @override
   StatefulWidget build(BuildContext context) {
     //return networkMessenger(this);
     return MaterialApp(
-      home: const MyNetworkPage(title: 'Network Test Page'),
+      //home: const MyNetworkPage(title: 'Network Test Page'),
+      home: const MyHomePage(title: 'Home Page'),
     );
   }
 }
@@ -39,274 +37,77 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int pageIndex = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
+  /// The following code is adapted from one of the flutter tutorials
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class MyNetworkPage extends StatefulWidget {
-  const MyNetworkPage({super.key, required this.title});
-  
-  final String title;
-  static const testImage = Image(image: AssetImage('test.bmp'),);
-
-  @override
-  State<MyNetworkPage> createState() => _MyNetworkPageState();
-
-  void addMsg(String message) {
-    _MyNetworkPageState()._addMsg(netMsg: message);
-  }
-
-}
-
-class _MyNetworkPageState extends State<MyNetworkPage> {
-  //late Socket _socket;
-  //bool isConnected = false;
-  final myController = TextEditingController();
-  final addrTextController = TextEditingController();
-  List messages = [];
-  List<String> recMessages = [];
-  int _counter = 0;
-
-  // from: https://stackoverflow.com/questions/69464611/how-can-i-connect-to-tcp-socket-not-web-socket-in-flutter
-  // from: https://docs.flutter.dev/cookbook/networking/web-sockets#complete-example
-  /*
-  // ignore: non_constant_identifier_names
-  void _connectToServer(String IP, int port) async {
-    _socket = await Socket.connect(IP, port);
-    // from: https://stackoverflow.com/questions/72789853/how-to-check-if-the-tcp-socket-is-still-connected-in-flutter
-    isConnected = true;
-    
-    //
-  }
-
-  // get contents of connect text and convert it into an ip address and port
-  void _serverConnect() {
-    List<String> word = addrTextController.text.split(":");
-    String ipAddr = word[0];
-    int port = int.parse(word[1]);
-    print('connecting to ' + ipAddr + ":" + port.toString());
-    _connectToServer(ipAddr, port);
-  }
-
-  void _getMessages() async {
-    String msg;
-
-    // listen to the received data event stream
-    _socket.listen((List<int> event) {
-      msg = utf8.decode(event);
-      print("got: " + msg);
-      _addMsg(netMsg: msg);
-      return;
-    });
-  }
-  
-  void _sendMessage(String msg) async {
-    _socket.add(utf8.encode(msg));
-    _socket.flush();
-  }
-
-  void _disconnectFromServer() async {
-      _socket.close();
-  }
-  */
-
-  void _getMessage() {
-    while (recMessages.isNotEmpty) { _addMsg(netMsg:recMessages.removeLast()); }
-  }
-
-  void _sendMessage(String msg) async {
-    SocketService.sendMessage(msg);
-  }
-
-  void _serverConnect() async {
-    SocketService().initializeSocket(addrTextController.text, recMessages, _getMessage);
-  }
-
-  Widget _formatMessage(String _message, int i) {
-    String src = _message.substring(0, _message.indexOf(':'));
-    String message = _message.substring(_message.indexOf(':') + 1);
-    //String des = message.endsWith("@PC") ? "[PC] " : "[APP] ";
-    var mColour = Colors.amber[600];
-
-    switch (src) {
-      case 'PC':
-        mColour = const Color.fromARGB(255, 0, 208, 255);
-        break;
-      case 'RPI':
-        mColour = const Color.fromARGB(255, 255, 0, 102);
-        break;
+    Widget page;
+    switch (pageIndex) {
+      case 0:
+        page = TestPage(title: 'Bed Overview');
+      case 1:
+        page = TestPage(title: 'Bed Health Inspector');
+      case 2:
+        page = MyNetworkPage(title: 'Network Debug Function');
+      case 3:
+        page = TestPage(title: 'Test Page');
+      case 4:
+        page = AboutPage(title: 'About Data Viewer...');
       default:
-        mColour = Colors.amber[600];
+        throw UnimplementedError('no widget for $pageIndex');
     }
 
-    return Container(
-        height: 50,
-        color: mColour,
-          child: Center(child: Text(i.toString() + ": " + message)),
-      );
-  }
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  void _addMsg({String netMsg = ""}) {
-    String msg;
-    
-    if (myController.text == "" && netMsg == "") { return; }
-
-    // add counter to message 
-    setState(() {
-      if (netMsg != "") {
-        msg = 'PC:' + netMsg;
-      } else {
-        msg = 'APP:' + myController.text;
-        myController.clear();
-        _sendMessage(msg);
-
-        testClick();
+   return LayoutBuilder(
+      builder: (context,constraints) {
+        return Scaffold(
+          body: Row(
+            children: [
+              SafeArea(
+                child: NavigationRail(
+                  extended: constraints.maxWidth >= 600,
+                  destinations: [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.table_chart),
+                      label: Text('Bedding Overview'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.monitor_heart_sharp),
+                      label: Text('Bed Health Inspector'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.question_answer),
+                      label: Text('Network Debug Chat'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.handyman),
+                      label: Text('Test Page'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.question_mark),
+                      label: Text('About Page'),
+                    ),
+                  ],
+                  selectedIndex: pageIndex,
+                  onDestinationSelected: (value) {
+                    setState(() {
+                      pageIndex = value;
+                    });
+                  },
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: page,
+                ),
+              ),
+            ],
+          ),
+        );
       }
-      // add message to message log widget
-      messages.add(msg);
-      
-      _incrementCounter();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> widgetChildren = [];
-    int numberOfMessages = messages.length;
-
-    for (int i = 0; i < numberOfMessages; i++) {
-      widgetChildren.add(_formatMessage(messages[i], i));
-    }
-
-    Widget NetMsg = ListView(
-      padding: const EdgeInsets.all(8),
-      children: widgetChildren,
-    );
-
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Column(
-        children: [
-          Expanded(child: NetMsg),
-          const Image(
-            image: AssetImage('test.bmp'),
-            scale:
-          ),
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: Row(
-              spacing: 20,
-              children: [
-                Expanded(
-                  child: Form(
-                    child: TextFormField(
-                      // https://stackoverflow.com/questions/72153633/flutter-submit-textformfield-on-enter
-                      onFieldSubmitted: (value) { _addMsg(); },
-                      controller: myController,
-                      decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Enter message to send to server',
-                      ),
-                    ),
-                  )
-                ),
-                ElevatedButton(onPressed: _addMsg, child: const Text('Send')),
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: Row(
-              spacing: 20,
-              children: [
-                ElevatedButton(onPressed: _getMessage, child: const Text('Refresh')),
-                Expanded(
-                  child: Form(
-                    child: TextFormField(
-                      // https://stackoverflow.com/questions/72153633/flutter-submit-textformfield-on-enter
-                      onFieldSubmitted: (value) { _serverConnect(); },
-                      controller: addrTextController,
-                      decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Server IP:Port',
-                      ),
-                    ),
-                  )
-                ),
-                ElevatedButton(onPressed: _serverConnect, child: const Text('Connect')),
-              ],
-            ),
-          ),
-        ]
-      )
     );
   }
-    
-    /*
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-  */
 }
+
+

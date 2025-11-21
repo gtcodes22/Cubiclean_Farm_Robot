@@ -3,8 +3,6 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
-import 'main.dart';
-
 class SocketService {
   static bool isConnected = false;
   static Socket? _socket;
