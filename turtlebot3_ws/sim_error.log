@@ -1,0 +1,40 @@
+[INFO] [launch]: All log files can be found below /home/gideon/.ros/log/2025-11-11-16-29-53-010312-gideon-HP-15-28179
+[INFO] [launch]: Default logging verbosity is set to INFO
+urdf_file_name : turtlebot3_burger.urdf
+urdf_file_name : turtlebot3_burger.urdf
+[INFO] [gazebo-1]: process started with pid [28183]
+[INFO] [gazebo-2]: process started with pid [28184]
+[INFO] [create-3]: process started with pid [28185]
+[INFO] [parameter_bridge-4]: process started with pid [28187]
+[INFO] [robot_state_publisher-5]: process started with pid [28189]
+[create-3] [INFO] [1762878593.710946373] [ros_gz_sim]: Requesting list of world names.
+[robot_state_publisher-5] [INFO] [1762878593.724915737] [robot_state_publisher]: Robot initialized
+[gazebo-2] [1;33m[GUI] [Wrn] [Application.cc:908] [0m[1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:413:17: QML ToolButton: Binding loop detected for property "implicitHeight"[0m[1;33m[0m
+[gazebo-2] [1;33m[GUI] [Wrn] [Application.cc:908] [0m[1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight"[0m[1;33m[0m
+[gazebo-2] [1;33m[GUI] [Wrn] [Application.cc:908] [0m[1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight"[0m[1;33m[0m
+[gazebo-2] [1;33m[GUI] [Wrn] [Application.cc:908] [0m[1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:413:17: QML ToolButton: Binding loop detected for property "implicitHeight"[0m[1;33m[0m
+[gazebo-2] [1;33m[GUI] [Wrn] [Application.cc:908] [0m[1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight"[0m[1;33m[0m
+[gazebo-2] [1;33m[GUI] [Wrn] [Application.cc:908] [0m[1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight"[0m[1;33m[0m
+[gazebo-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="turtlebot3_burger"]/link[@name="base_scan"]/sensor[@name="hls_lfcd_lds"]/gz_frame_id:/home/gideon/turtlebot3_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf:L141]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[gazebo-2] [1;33m[GUI] [Wrn] [Application.cc:908] [0m[1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:413:17: QML ToolButton: Binding loop detected for property "implicitHeight"[0m[1;33m[0m
+[gazebo-2] [1;33m[GUI] [Wrn] [Application.cc:908] [0m[1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight"[0m[1;33m[0m
+[gazebo-2] [1;33m[GUI] [Wrn] [Application.cc:908] [0m[1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight"[0m[1;33m[0m
+[gazebo-1] [1;31m[Err] [Server.cc:86] [0m[1;31mError Code [0m[1;31m14[0m[1;31m: [0m[1;31mMsg: [0m[1;31mParser configurations requested resolved uris, but uri [model://turtlebot3_gazebo/materials/farm_materials.sdf] could not be resolved.[0m[1;31m[0m
+[gazebo-1] [1;31m[Err] [Server.cc:86] [0m[1;31mError Code [0m[1;31m9[0m[1;31m: [0m[1;31mMsg: [0m[1;31mFailed to load a world.[0m[1;31m[0m
+[INFO] [gazebo-1]: process has finished cleanly [pid 28183]
+[INFO] [launch]: process[gazebo-1] was required: shutting down launched system
+[INFO] [robot_state_publisher-5]: sending signal 'SIGINT' to process[robot_state_publisher-5]
+[INFO] [parameter_bridge-4]: sending signal 'SIGINT' to process[parameter_bridge-4]
+[INFO] [create-3]: sending signal 'SIGINT' to process[create-3]
+[INFO] [gazebo-2]: sending signal 'SIGINT' to process[gazebo-2]
+[robot_state_publisher-5] [INFO] [1762878594.275950448] [rclcpp]: signal_handler(signum=2)
+[parameter_bridge-4] [INFO] [1762878594.276591509] [rclcpp]: signal_handler(signum=2)
+[create-3] [INFO] [1762878594.277559342] [rclcpp]: signal_handler(signum=2)
+[INFO] [robot_state_publisher-5]: process has finished cleanly [pid 28189]
+[INFO] [parameter_bridge-4]: process has finished cleanly [pid 28187]
+[create-3] [INFO] [1762878598.711554987] [ros_gz_sim]: Timed out when getting world names.
+[ERROR] [create-3]: process has died [pid 28185, exit code 255, cmd '/opt/ros/jazzy/lib/ros_gz_sim/create -name burger -file /home/gideon/turtlebot3_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf -x -5.84 -y 1.09 -z 0.01 --ros-args'].
+[ERROR] [gazebo-2]: process[gazebo-2] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+[INFO] [gazebo-2]: sending signal 'SIGTERM' to process[gazebo-2]
+[ERROR] [gazebo-2]: process has died [pid 28184, exit code -15, cmd 'ruby /opt/ros/jazzy/opt/gz_tools_vendor/bin/gz sim -g -v2  --force-version 8'].
+[INFO] [launch]: process[gazebo-2] was required: shutting down launched system
