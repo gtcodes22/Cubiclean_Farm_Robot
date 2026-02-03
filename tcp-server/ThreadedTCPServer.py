@@ -10,6 +10,8 @@ from packet import PacketMessage, construct_packet, is_valid_packet, is_valid_pr
 from is_socket_closed import *
 from QueueEvent import *
 
+import struct
+
 # class which inherits methods from ThreadingMixIn and TCPServer
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     def start(self,qMain,qThread):
@@ -44,7 +46,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         cur_thread = threading.current_thread()
         main_thread = threading.main_thread()
         clientAddr = f'{self.client_address[0]}:{self.client_address[1]}'
-        
+        qMain = self.server.qMain
         device = 'Unknown'
         
         # set timeout
@@ -64,7 +66,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 continue
             except ConnectionResetError:
                 print(f"server: connection with {clientAddr} terminated without a proper goodbye :(")
-                qMain.put(QueueEvent(DEVICE_DISCONNECTED, device)
+                qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
                 exit()
                     
             # check if socket is still connected
@@ -93,6 +95,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 print(f'server: setting client {clientAddr} as APP')
                 device = 'APP'
                 qMain.put(QueueEvent(DEVICE_CONNECTED, device, socket = self.request))
+                self.server.appSocket = self.request
                 
             # send socket to main queue if /bot command is passed (to set
             # this socket as the 'BOT'
@@ -100,6 +103,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 print(f'server: setting client {clientAddr} as BOT')
                 device = 'BOT'
                 qMain.put(QueueEvent(DEVICE_CONNECTED, device, socket = self.request))
+                self.server.botSocket = self.request
                 
             # get length of data from packet
             length = int.from_bytes(raw[9:13], 'big')
@@ -170,7 +174,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # echo whole message back to client
                 print(f"server: echo '{pdata.rstrip()}' to {clientAddr}")
                 self.request.sendall(bytes(pdata, 'ascii'))
-                qMain.put(QueueEvent(NET_RESPONSE, device, msg = pData))
+                qMain.put(QueueEvent(NET_RESPONSE, device, msg = pdata))
                 
             """
             # get response from main thread

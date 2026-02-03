@@ -17,7 +17,7 @@ class PacketMessage():
 def construct_packet(src: str, des: str, mtype: str, data: str) -> str:
     length = len(data)
     end = '\x00\xa8\x6b'
-    return bytes(f'{src}{des}{mtype}{length}{data}{end}', 'ascii')
+    return bytes(f'{src}{des}{mtype}{length}{data}{end}', 'utf-8')
     
 def is_valid_packet(data: str) -> bool:
     if (len(data) >= 16 and \

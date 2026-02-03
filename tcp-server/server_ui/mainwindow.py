@@ -2,8 +2,8 @@
 import sys
 import struct
 
-from PySide6.QtWidgets import QApplication, QMainWindow
-from PySide6.QtCore import QObject, QThread#, pyqtSignal
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QLabel
+from PySide6.QtCore import QObject, QThread, Signal, Slot#, pyqtSignal
 #from PySide6 import QtUiTools
 
 # Important:
@@ -11,6 +11,9 @@ from PySide6.QtCore import QObject, QThread#, pyqtSignal
 #     pyside6-uic form.ui -o ui_form.py, or
 #     pyside2-uic form.ui -o ui_form.py
 from server_ui.ui_form import Ui_MainWindow
+from server_ui.QueueWatcher import QueueWatcher
+from packet import construct_packet
+from QueueEvent import *
 
 def clickTest():
     print("click!")
@@ -22,7 +25,7 @@ def appDebug(msg):
     print(f'Debug log {msg}')
     ui = Ui_MainWindow()
     
-    ui.scrollAreaWidgetContents_appDebug
+    #ui.scrollAreaWidgetContents_appDebug
     
 def sendMessage(ui, isPi = False):
     # add src and destination to message
@@ -50,10 +53,26 @@ def sendMessage(ui, isPi = False):
     # get length of message and convert it into 4 bytes, big endian
     length = struct.pack('>i', len(msg))
     
-    print(f'ui: sending {src}{des}{cat}{length}{msg}{end}')
+    addToChatLog(ui, msg, src, isPi = False)
+    #packet = f'{src}{des}{cat}{length}{msg}{end}'
+    packet = bytes(f'{msg}\r\n', 'utf-8')
+    
+    if ui.checkBox_sendAsPlainText.isChecked() == False:
+        packet = construct_packet(src, des, cat, msg)
+    
+    print(f'ui: sending {packet}')
+    return packet
 
-def addToChatLog(self, ui, message, isPi = False):
-    ui.scrollArea_app
+def addToChatLog(ui, message, src, isPi = False):
+    # from https://stackoverflow.com/questions/22255994/pyqt-adding-widgets-to-scrollarea-during-the-runtime
+    label = QLabel(f'{src}: {message.rstrip()}')
+    label.setStyleSheet("background-color: darkgreen")
+    if src == 'SPC':
+        label.setStyleSheet("background-color: darkblue")
+        
+    widget = ui.scrollAreaWidgetContents_2
+    layout = widget.layout()
+    layout.insertWidget(layout.count()-1, label)
     
 class MainWindow(QMainWindow):
     def __init__(self, server, qMain, qThread, parent=None):
@@ -65,7 +84,19 @@ class MainWindow(QMainWindow):
         self.qThread = qThread
         
         # set up a qThread to watch the queues
-        #self.thread = Worker()
+        """
+        self.thread = QThread()
+        self.QueueWatcher = QueueWatcher()
+        self.QueueWatcher.setQueue(self.qMain)
+        self.QueueWatcher.moveToThread(self.thread)
+        self.thread.start()
+        """
+        self.qwThread = QueueWatcher()
+        self.qwThread.setQueue(self.qMain)
+        self.qwThread.start()
+        
+        # connect QueueWatcher signals
+        #self.qwThread.newNetMessage.connect()
         
         # load widgets from UI file so we can manipulate them in the
         # program
@@ -76,20 +107,46 @@ class MainWindow(QMainWindow):
         #self.phoneAppLineEdit = self.ui.lineEdit_app
         self.connectWidgets()
     
+    @Slot(str)
+    def recieveMessageApp(self, arg):
+        print(f'slot mechanism activated with {arg}')
+        addToChatLog(self.ui, arg, 'APP')
+        
     def connectWidgets(self):
         self.ui.lineEdit_app.returnPressed.connect(self.sendMessageApp)
         self.ui.lineEdit_rpi.returnPressed.connect(self.sendMessageRPi)
         self.ui.pushButton_connect_rpi.clicked.connect(clickTest)
+        
+        # Queue Watcher signals
+        self.qwThread.newNetMessage.connect(self.recieveMessageApp)
+        self.qwThread.serverEND.connect(self.close_server)
+
+    # from: https://www.w3resource.com/python-exercises/pyqt/python-pyqt-connecting-signals-to-slots-exercise-11.php
+    def closeEvent(self, event):
+        # Ask for confirmation before closing
+        confirmation = QMessageBox.question(self, "Confirmation", "Are you sure you want to close the application?", QMessageBox.Yes | QMessageBox.No)
+
+        if confirmation == QMessageBox.Yes:
+            # end the queue watcher thread with a server end queue event
+            self.qMain.put(QueueEvent(SERVER_END, ''))
+            
+            event.accept()  # Close the app
+        else:
+            event.ignore()  # Don't close the app
+        
+    @Slot()
+    def close_server(self):
+        QApplication.quit()
 
     def sendMessageApp(self):
         # send a message to the phone app
-        msg = sendMessage(self.ui, False)
-        server.appSocket.sendall(bytes(msg, 'ascii'))
+        packet = sendMessage(self.ui, False)
+        self.server.appSocket.sendall(packet)
         
     def sendMessageRPi(self):
         # send a message to the turtlebot
-        msg = sendMessage(self.ui, True)
-        server.botSocket.sendall(bytes(msg, 'ascii'))
+        packet = sendMessage(self.ui, True)
+        self.server.botSocket.sendall(packet)
 
 def qMain(server, qMain, qThread):
     app = QApplication(sys.argv)
