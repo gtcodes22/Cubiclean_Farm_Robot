@@ -2,8 +2,9 @@
 import sys
 import struct
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QLabel
-from PySide6.QtCore import QObject, QThread, Signal, Slot#, pyqtSignal
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QLabel
+from PySide6.QtCore import QObject, QThread, Signal, Slot, QSize#, pyqtSignal
+from PySide6.QtGui import QPixmap
 #from PySide6 import QtUiTools
 
 # Important:
@@ -82,6 +83,7 @@ class MainWindow(QMainWindow):
         self.server = server
         self.qMain = qMain
         self.qThread = qThread
+        self.pixmap = []
         
         # set up a qThread to watch the queues
         """
@@ -113,9 +115,13 @@ class MainWindow(QMainWindow):
         addToChatLog(self.ui, arg, 'APP')
         
     def connectWidgets(self):
+        # Network Debug Chat page related signals
         self.ui.lineEdit_app.returnPressed.connect(self.sendMessageApp)
         self.ui.lineEdit_rpi.returnPressed.connect(self.sendMessageRPi)
         self.ui.pushButton_connect_rpi.clicked.connect(clickTest)
+        
+        #self.ui.pushButton_app_sendImg.clicked.connect(self.get_image)
+        #self.ui.pushButton_app_sendDat.clicked.connect(self.get_dat_file)
         
         # Queue Watcher signals
         self.qwThread.newNetMessage.connect(self.recieveMessageApp)
@@ -147,6 +153,55 @@ class MainWindow(QMainWindow):
         # send a message to the turtlebot
         packet = sendMessage(self.ui, True)
         self.server.botSocket.sendall(packet)
+        
+    def get_image(self):
+        # get image filename
+        img = get_file(False)
+        
+        # create a pixmap of the image to add to the GUI
+        pixmap = QPixmap(img)
+        
+        # resize it to be 128 pixels tall (no more than 256 pixels wide)
+        pixmap = pixmap.scaled(QSize(256,128), aspectMode=QT.KeepAspectRatio)
+        
+        # add image to chat log
+        
+        # send image to app
+        
+        
+    def get_dat_file(self):
+        # get data filename
+        data = get_file(True)
+        
+        # add image representation of a data file to chat log (?)
+        
+    def get_file(self, isDat):
+        """
+        # set up dialog
+        dialog = QFileDialog(self)
+        
+        # only allows selecting existing files
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+        
+        # set dialog file type filters
+        dialog.setNameFilter("Images (*.png *.jpg *.bmp)")
+        
+        # set dialog view to list view
+        dialog.setViewMode(QFileDialog.List)
+        """
+        
+        caption = tr("Open Image...")
+        filter = tr("Image Files (*.png *.jpg *.bmp)")
+        
+        if isDat:
+            caption = tr("Open Data File...")
+            filter = tr("All Files (*.*)")
+        
+        # open file open dialog
+        fileName = QFileDialog.getOpenFileName(self, caption = caption, filter = filter)
+        
+        print(f'{filename}')
+        return filename
 
 def qMain(server, qMain, qThread):
     app = QApplication(sys.argv)

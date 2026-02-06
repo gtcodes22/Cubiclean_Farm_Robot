@@ -24,7 +24,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab_systemOverview">
        <attribute name="title">
@@ -237,7 +237,7 @@
          </rect>
         </property>
         <property name="text">
-         <string>disconnected (test)</string>
+         <string>disconnected</string>
         </property>
        </widget>
        <widget class="QLabel" name="label_5">
@@ -506,7 +506,7 @@
                <x>0</x>
                <y>0</y>
                <width>306</width>
-               <height>402</height>
+               <height>376</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -526,6 +526,46 @@
              </layout>
             </widget>
            </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <property name="spacing">
+             <number>4</number>
+            </property>
+            <property name="sizeConstraint">
+             <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_app_sendImg">
+              <property name="text">
+               <string>Send Image...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_app_sendDat">
+              <property name="text">
+               <string>Send Data...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <widget class="QLineEdit" name="lineEdit_app"/>

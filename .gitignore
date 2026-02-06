@@ -61,3 +61,4 @@ qtcreator-*
 # Catkin custom files
 CATKIN_IGNORE
 >>>>>>> 8b1f9b899bf92fc4cb6fe69e04f69f005f597027
+*.pyc
