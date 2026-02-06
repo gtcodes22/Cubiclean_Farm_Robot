@@ -66,13 +66,15 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 continue
             except ConnectionResetError:
                 print(f"server: connection with {clientAddr} terminated without a proper goodbye :(")
-                qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
+                if device != 'Unknown':
+                    qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
                 exit()
                     
             # check if socket is still connected
             if pdata == '' and is_socket_closed(self.request):
                 print(f"server: connection with {clientAddr} terminated without a proper goodbye :(")
-                qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
+                if device != 'Unknown':
+                    qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
                 exit()
                 
             # allow client to end server here. If a bug in the code below
@@ -97,13 +99,19 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 qMain.put(QueueEvent(DEVICE_CONNECTED, device, socket = self.request))
                 self.server.appSocket = self.request
                 
+                # ignore the rest of the data
+                continue
+                
             # send socket to main queue if /bot command is passed (to set
             # this socket as the 'BOT'
-            if pdata.upper().startswith("/BOT"):
-                print(f'server: setting client {clientAddr} as BOT')
-                device = 'BOT'
+            if pdata.upper().startswith("/BOT") or pdata.upper().startswith("/RPI"):
+                print(f'server: setting client {clientAddr} as RPI')
+                device = 'RPI'
                 qMain.put(QueueEvent(DEVICE_CONNECTED, device, socket = self.request))
                 self.server.botSocket = self.request
+                
+                # ignore the rest of the data
+                continue
                 
             # get length of data from packet
             length = int.from_bytes(raw[9:13], 'big')
@@ -125,7 +133,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     
                     # let qMain know that a connection has initiated and pass the 
                     # socket and device name to the queue
-                    if not device:
+                    if device == 'Unknown':
                         device = packet.src
                         qMain.put(QueueEvent(DEVICE_CONNECTED, device,
                             socket = self.request))
@@ -151,7 +159,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     print(f'server: connection time out for {clientAddr}')
                     return
             else:
-                # normal test message, try to get rest of message
+                # normal test message
+                
                 #readWaiting, _, _ = select([self.request],[],[])
                 
                 #if self.request in readWaiting:
@@ -167,6 +176,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     pdata += str(raw, 'ascii')
                 except TimeoutError:
                     pass
+                    
+                # add to chat log
+                qMain.put(QueueEvent(NET_MSG, device, msg = pdata))
                     
                 # reset timeout
                 self.request.settimeout(20)

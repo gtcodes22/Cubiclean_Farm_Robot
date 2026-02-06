@@ -16,10 +16,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QFormLayout, QGridLayout,
-    QHBoxLayout, QLabel, QLineEdit, QMainWindow,
-    QMenuBar, QProgressBar, QPushButton, QScrollArea,
-    QSizePolicy, QSpacerItem, QSpinBox, QStatusBar,
-    QTabWidget, QVBoxLayout, QWidget)
+    QHBoxLayout, QLabel, QLayout, QLineEdit,
+    QMainWindow, QMenuBar, QProgressBar, QPushButton,
+    QScrollArea, QSizePolicy, QSpacerItem, QSpinBox,
+    QStatusBar, QTabWidget, QTextEdit, QVBoxLayout,
+    QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -215,10 +216,11 @@ class Ui_MainWindow(object):
 
         self.scrollArea_rpi = QScrollArea(self.tab_netChat)
         self.scrollArea_rpi.setObjectName(u"scrollArea_rpi")
+        self.scrollArea_rpi.setEnabled(True)
         self.scrollArea_rpi.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 306, 402))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 302, 378))
         self.verticalLayout_4 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalSpacer_4 = QSpacerItem(20, 383, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
@@ -229,8 +231,21 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_rpi.addWidget(self.scrollArea_rpi)
 
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setContentsMargins(-1, -1, -1, 0)
+        self.label_BotConnectStatus = QLabel(self.tab_netChat)
+        self.label_BotConnectStatus.setObjectName(u"label_BotConnectStatus")
+        self.label_BotConnectStatus.setMinimumSize(QSize(0, 18))
+
+        self.horizontalLayout_4.addWidget(self.label_BotConnectStatus)
+
+
+        self.verticalLayout_rpi.addLayout(self.horizontalLayout_4)
+
         self.lineEdit_rpi = QLineEdit(self.tab_netChat)
         self.lineEdit_rpi.setObjectName(u"lineEdit_rpi")
+        self.lineEdit_rpi.setEnabled(False)
 
         self.verticalLayout_rpi.addWidget(self.lineEdit_rpi)
 
@@ -246,10 +261,11 @@ class Ui_MainWindow(object):
 
         self.scrollArea_app = QScrollArea(self.tab_netChat)
         self.scrollArea_app.setObjectName(u"scrollArea_app")
+        self.scrollArea_app.setEnabled(True)
         self.scrollArea_app.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 306, 402))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 310, 376))
         self.verticalLayout_3 = QVBoxLayout(self.scrollAreaWidgetContents_2)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
@@ -260,8 +276,38 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_app.addWidget(self.scrollArea_app)
 
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setSpacing(4)
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.horizontalLayout_6.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        self.horizontalLayout_6.setContentsMargins(-1, -1, -1, 0)
+        self.label_AppConnectStatus = QLabel(self.tab_netChat)
+        self.label_AppConnectStatus.setObjectName(u"label_AppConnectStatus")
+
+        self.horizontalLayout_6.addWidget(self.label_AppConnectStatus)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_6.addItem(self.horizontalSpacer_2)
+
+        self.pushButton_app_sendImg = QPushButton(self.tab_netChat)
+        self.pushButton_app_sendImg.setObjectName(u"pushButton_app_sendImg")
+        self.pushButton_app_sendImg.setEnabled(False)
+
+        self.horizontalLayout_6.addWidget(self.pushButton_app_sendImg)
+
+        self.pushButton_app_sendDat = QPushButton(self.tab_netChat)
+        self.pushButton_app_sendDat.setObjectName(u"pushButton_app_sendDat")
+        self.pushButton_app_sendDat.setEnabled(False)
+
+        self.horizontalLayout_6.addWidget(self.pushButton_app_sendDat)
+
+
+        self.verticalLayout_app.addLayout(self.horizontalLayout_6)
+
         self.lineEdit_app = QLineEdit(self.tab_netChat)
         self.lineEdit_app.setObjectName(u"lineEdit_app")
+        self.lineEdit_app.setEnabled(False)
 
         self.verticalLayout_app.addWidget(self.lineEdit_app)
 
@@ -273,21 +319,10 @@ class Ui_MainWindow(object):
         self.tab_appDebug.setObjectName(u"tab_appDebug")
         self.verticalLayout = QVBoxLayout(self.tab_appDebug)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.scrollArea = QScrollArea(self.tab_appDebug)
-        self.scrollArea.setObjectName(u"scrollArea")
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_3 = QWidget()
-        self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 622, 446))
-        self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents_3)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalSpacer_5 = QSpacerItem(20, 431, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.textEdit_DebugLog = QTextEdit(self.tab_appDebug)
+        self.textEdit_DebugLog.setObjectName(u"textEdit_DebugLog")
 
-        self.verticalLayout_2.addItem(self.verticalSpacer_5)
-
-        self.scrollArea.setWidget(self.scrollAreaWidgetContents_3)
-
-        self.verticalLayout.addWidget(self.scrollArea)
+        self.verticalLayout.addWidget(self.textEdit_DebugLog)
 
         self.tabWidget.addTab(self.tab_appDebug, "")
         self.tab_settings = QWidget()
@@ -318,21 +353,21 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(3)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Cubiclean Robot Server", None))
         self.label_13.setText(QCoreApplication.translate("MainWindow", u"Phone Battery", None))
         self.label_28.setText(QCoreApplication.translate("MainWindow", u"TurtleBot Battery", None))
         self.label_29.setText(QCoreApplication.translate("MainWindow", u"Bed Scan Progress", None))
         self.label_32.setText(QCoreApplication.translate("MainWindow", u"Number of Bed Scan readings to take", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_systemOverview), QCoreApplication.translate("MainWindow", u"Overview", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Connection Status", None))
-        self.label_isConnected_rpi.setText(QCoreApplication.translate("MainWindow", u"disconnected (test)", None))
+        self.label_isConnected_rpi.setText(QCoreApplication.translate("MainWindow", u"disconnected", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"IP Address", None))
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"Port", None))
         self.pushButton_connect_rpi.setText(QCoreApplication.translate("MainWindow", u"Connect", None))
@@ -348,9 +383,13 @@ class Ui_MainWindow(object):
         self.pushButton_connect_app.setText(QCoreApplication.translate("MainWindow", u"Connect", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_appStatus), QCoreApplication.translate("MainWindow", u"Phone App Status", None))
         self.label_rpi.setText(QCoreApplication.translate("MainWindow", u"Raspberry Pi", None))
+        self.label_BotConnectStatus.setText(QCoreApplication.translate("MainWindow", u"\u274c Device Disconnected", None))
         self.label_app.setText(QCoreApplication.translate("MainWindow", u"Phone App", None))
+        self.label_AppConnectStatus.setText(QCoreApplication.translate("MainWindow", u"\u274c Device Disconnected", None))
+        self.pushButton_app_sendImg.setText(QCoreApplication.translate("MainWindow", u"Send Image...", None))
+        self.pushButton_app_sendDat.setText(QCoreApplication.translate("MainWindow", u"Send Data...", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_netChat), QCoreApplication.translate("MainWindow", u"Network Debug", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_appDebug), QCoreApplication.translate("MainWindow", u"App Debug", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_appDebug), QCoreApplication.translate("MainWindow", u"Debug Log", None))
         self.checkBox_sendAsPlainText.setText(QCoreApplication.translate("MainWindow", u"Send messages to devices as plain text", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_settings), QCoreApplication.translate("MainWindow", u"Settings", None))
     # retranslateUi

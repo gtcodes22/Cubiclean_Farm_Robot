@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Cubiclean Robot Server</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -451,6 +451,9 @@
           </item>
           <item>
            <widget class="QScrollArea" name="scrollArea_rpi">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="widgetResizable">
              <bool>true</bool>
             </property>
@@ -459,8 +462,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>306</width>
-               <height>402</height>
+               <width>302</width>
+               <height>378</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -482,7 +485,31 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit_rpi"/>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_BotConnectStatus">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>18</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>❌ Device Disconnected</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_rpi">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -497,6 +524,9 @@
           </item>
           <item>
            <widget class="QScrollArea" name="scrollArea_app">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="widgetResizable">
              <bool>true</bool>
             </property>
@@ -505,7 +535,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>306</width>
+               <width>310</width>
                <height>376</height>
               </rect>
              </property>
@@ -539,6 +569,13 @@
              <number>0</number>
             </property>
             <item>
+             <widget class="QLabel" name="label_AppConnectStatus">
+              <property name="text">
+               <string>❌ Device Disconnected</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <spacer name="horizontalSpacer_2">
               <property name="orientation">
                <enum>Qt::Orientation::Horizontal</enum>
@@ -553,6 +590,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="pushButton_app_sendImg">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string>Send Image...</string>
               </property>
@@ -560,6 +600,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="pushButton_app_sendDat">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string>Send Data...</string>
               </property>
@@ -568,7 +611,11 @@
            </layout>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit_app"/>
+           <widget class="QLineEdit" name="lineEdit_app">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -576,40 +623,11 @@
       </widget>
       <widget class="QWidget" name="tab_appDebug">
        <attribute name="title">
-        <string>App Debug</string>
+        <string>Debug Log</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QScrollArea" name="scrollArea">
-          <property name="widgetResizable">
-           <bool>true</bool>
-          </property>
-          <widget class="QWidget" name="scrollAreaWidgetContents_3">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>622</width>
-             <height>446</height>
-            </rect>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_2">
-            <item>
-             <spacer name="verticalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Orientation::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>431</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
-         </widget>
+         <widget class="QTextEdit" name="textEdit_DebugLog"/>
         </item>
        </layout>
       </widget>

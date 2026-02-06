@@ -7,10 +7,11 @@ from QueueEvent import *
 
 
 class QueueWatcher(QThread):
-    newNetMessage = Signal(str)
+    newNetMessage = Signal(str, str, str)
     serverEND = Signal()
-    #appConnected = pyqtSignal(socket)
-    #botConnected = pyqtSignal(socket)
+    deviceConnected = Signal(bool)
+    deviceDisconnected = Signal(bool)
+    logQueueEvent = Signal(str)
     
     def setQueue(self, queue):
         self.queue = queue
@@ -22,26 +23,34 @@ class QueueWatcher(QThread):
                 queueEvent = self.queue.get(timeout=25)
                 
                 msg = ''
+                device = queueEvent.device
                 sType = f'{queueEvent.type}'
+                
+                if queueEvent.type == DEVICE_CONNECTED:
+                    self.deviceConnected.emit(device == 'RPI')
+                if queueEvent.type == DEVICE_DISCONNECTED:
+                    self.deviceDisconnected.emit(device == 'RPI')
+                    
                 if queueEvent.type == NET_RESPONSE:
                     msg = queueEvent.msg
                     sType += 'NR'
+                    self.newNetMessage.emit(msg, 'SPC', queueEvent.device)
                     
                 elif queueEvent.type == NET_MSG:
                     msg = queueEvent.msg
                     sType += 'NM'
+                    self.newNetMessage.emit(msg, queueEvent.device, 'SPC')
                 
                 elif queueEvent.type == SERVER_END:
-                    self.serverEND.emit()
+                    #self.serverEND.emit()
                     
                     return
                 
                 # add message to window only if there is a message
-                if msg:
-                    print(f"QW: [{queueEvent.device}] {msg}")
-                    self.newNetMessage.emit(msg)
                 
                 
+                # add queue event to debug log
+                self.logQueueEvent.emit(queueEvent.description)
                 
             except QueueEmpty as e:
                 if not main_thread().is_alive():
