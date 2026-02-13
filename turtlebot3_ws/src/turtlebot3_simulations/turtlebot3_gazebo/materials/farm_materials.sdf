@@ -1,0 +1,144 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <material_library name="Farm">
+
+    <!-- 🪨 Structural Materials -->
+    <material name="Farm/Concrete">
+      <ambient>0.35 0.35 0.35 1</ambient>
+      <diffuse>0.45 0.45 0.45 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+    </material>
+
+    <material name="Farm/Brick">
+      <ambient>0.45 0.25 0.2 1</ambient>
+      <diffuse>0.6 0.3 0.25 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+    </material>
+
+    <material name="Farm/Wood">
+      <ambient>0.4 0.3 0.15 1</ambient>
+      <diffuse>0.55 0.4 0.2 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+    </material>
+
+    <material name="Farm/DarkWood">
+      <ambient>0.25 0.15 0.1 1</ambient>
+      <diffuse>0.4 0.25 0.15 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+    </material>
+
+    <!-- ⚙️ Metal Surfaces -->
+    <material name="Farm/Steel">
+      <ambient>0.5 0.5 0.5 1</ambient>
+      <diffuse>0.6 0.6 0.6 1</diffuse>
+      <specular>0.8 0.8 0.8 1</specular>
+    </material>
+
+    <material name="Farm/Stainless">
+      <ambient>0.7 0.7 0.7 1</ambient>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>1 1 1 1</specular>
+    </material>
+
+    <material name="Farm/RustySteel">
+      <ambient>0.4 0.3 0.25 1</ambient>
+      <diffuse>0.5 0.35 0.3 1</diffuse>
+      <specular>0.3 0.25 0.2 1</specular>
+    </material>
+
+    <material name="Farm/GalvanizedSteel">
+      <ambient>0.6 0.65 0.7 1</ambient>
+      <diffuse>0.75 0.8 0.85 1</diffuse>
+      <specular>0.9 0.9 0.9 1</specular>
+    </material>
+
+    <material name="Farm/FenceWire">
+      <ambient>0.55 0.55 0.55 1</ambient>
+      <diffuse>0.65 0.65 0.65 1</diffuse>
+      <specular>0.9 0.9 0.9 1</specular>
+    </material>
+
+    <!-- 🌿 Ground & Natural -->
+    <material name="Farm/Grass">
+      <ambient>0.2 0.45 0.1 1</ambient>
+      <diffuse>0.3 0.6 0.2 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+    </material>
+
+    <material name="Farm/DryGrass">
+      <ambient>0.65 0.55 0.25 1</ambient>
+      <diffuse>0.75 0.65 0.3 1</diffuse>
+      <specular>0.25 0.25 0.25 1</specular>
+    </material>
+
+    <material name="Farm/Soil">
+      <ambient>0.25 0.15 0.05 1</ambient>
+      <diffuse>0.35 0.25 0.1 1</diffuse>
+      <specular>0.15 0.15 0.15 1</specular>
+    </material>
+
+    <material name="Farm/Water">
+      <ambient>0.1 0.2 0.4 1</ambient>
+      <diffuse>0.2 0.3 0.5 0.8</diffuse>
+      <specular>0.9 0.9 1 1</specular>
+    </material>
+
+    <!-- 🐄 Bedding and Organic -->
+    <material name="Farm/BeddingDry">
+      <ambient>0.75 0.65 0.25 1</ambient>
+      <diffuse>0.85 0.75 0.3 1</diffuse>
+      <specular>0.25 0.25 0.25 1</specular>
+    </material>
+
+    <material name="Farm/BeddingWet">
+      <ambient>0.5 0.4 0.2 1</ambient>
+      <diffuse>0.6 0.5 0.25 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+    </material>
+
+    <material name="Farm/Manure">
+      <ambient>0.25 0.15 0.05 1</ambient>
+      <diffuse>0.35 0.25 0.1 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+    </material>
+
+    <!-- 🚜 Machinery and Paints -->
+    <material name="Farm/TractorRed">
+      <ambient>0.4 0.05 0.05 1</ambient>
+      <diffuse>0.7 0.1 0.1 1</diffuse>
+      <specular>0.9 0.9 0.9 1</specular>
+    </material>
+
+    <material name="Farm/TractorGreen">
+      <ambient>0.05 0.3 0.05 1</ambient>
+      <diffuse>0.1 0.5 0.1 1</diffuse>
+      <specular>0.9 0.9 0.9 1</specular>
+    </material>
+
+    <material name="Farm/Rubber">
+      <ambient>0.05 0.05 0.05 1</ambient>
+      <diffuse>0.15 0.15 0.15 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+    </material>
+
+    <material name="Farm/Plastic">
+      <ambient>0.2 0.2 0.2 1</ambient>
+      <diffuse>0.3 0.3 0.3 1</diffuse>
+      <specular>0.15 0.15 0.15 1</specular>
+    </material>
+
+    <!-- 🏠 Structural & Decorative -->
+    <material name="Farm/RoofMetal">
+      <ambient>0.5 0.5 0.55 1</ambient>
+      <diffuse>0.6 0.6 0.65 1</diffuse>
+      <specular>0.8 0.8 0.8 1</specular>
+    </material>
+
+    <material name="Farm/BarnRed">
+      <ambient>0.45 0.1 0.1 1</ambient>
+      <diffuse>0.65 0.15 0.15 1</diffuse>
+      <specular>0.25 0.25 0.25 1</specular>
+    </material>
+
+  </material_library>
+</sdf>

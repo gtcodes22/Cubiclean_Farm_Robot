@@ -1,0 +1,77 @@
+[0.021s] Invoking command in '/home/gideon/turtlebot3_ws/build/turtlebot3_drive': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/gideon/turtlebot3_ws/install/turtlebot3_teleop:/home/gideon/turtlebot3_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/gideon/turtlebot3_ws/src/turtlebot3/turtlebot3_drive -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/gideon/turtlebot3_ws/install/turtlebot3_drive
+[0.598s] -- The C compiler identification is GNU 13.3.0
+[0.598s] -- The CXX compiler identification is GNU 13.3.0
+[0.598s] -- Detecting C compiler ABI info
+[0.892s] -- Detecting C compiler ABI info - done
+[0.938s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.939s] -- Detecting C compile features
+[0.939s] -- Detecting C compile features - done
+[0.974s] -- Detecting CXX compiler ABI info
+[1.259s] -- Detecting CXX compiler ABI info - done
+[1.284s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[1.285s] -- Detecting CXX compile features
+[1.286s] -- Detecting CXX compile features - done
+[1.294s] -- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[1.606s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.724s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.809s] -- Found geometry_msgs: 5.3.6 (/opt/ros/jazzy/share/geometry_msgs/cmake)
+[1.897s] -- Found rosidl_generator_c: 4.6.6 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+[1.924s] -- Found rosidl_generator_cpp: 4.6.6 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+[1.957s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.995s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[2.079s] -- Found nav_msgs: 5.3.6 (/opt/ros/jazzy/share/nav_msgs/cmake)
+[2.162s] -- Found rclcpp: 28.1.12 (/opt/ros/jazzy/share/rclcpp/cmake)
+[2.287s] -- Found rmw_implementation_cmake: 7.3.2 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+[2.295s] -- Found rmw_fastrtps_cpp: 8.4.3 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+[2.437s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  
+[2.478s] -- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") 
+[2.519s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[2.640s] -- Found sensor_msgs: 5.3.6 (/opt/ros/jazzy/share/sensor_msgs/cmake)
+[2.679s] -- Found tf2: 0.36.14 (/opt/ros/jazzy/share/tf2/cmake)
+[2.807s] -- Configuring done (2.7s)
+[2.829s] -- Generating done (0.0s)
+[2.837s] -- Build files have been written to: /home/gideon/turtlebot3_ws/build/turtlebot3_drive
+[2.852s] Invoked command in '/home/gideon/turtlebot3_ws/build/turtlebot3_drive' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/gideon/turtlebot3_ws/install/turtlebot3_teleop:/home/gideon/turtlebot3_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/gideon/turtlebot3_ws/src/turtlebot3/turtlebot3_drive -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/gideon/turtlebot3_ws/install/turtlebot3_drive
+[2.854s] Invoking command in '/home/gideon/turtlebot3_ws/build/turtlebot3_drive': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/gideon/turtlebot3_ws/install/turtlebot3_teleop:/home/gideon/turtlebot3_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/gideon/turtlebot3_ws/build/turtlebot3_drive -- -j8 -l8
+[2.929s] [ 50%] [32mBuilding CXX object CMakeFiles/turtlebot3_drive.dir/src/turtlebot3_drive.cpp.o[0m
+[31.662s] [100%] [32m[1mLinking CXX executable turtlebot3_drive[0m
+[32.498s] [100%] Built target turtlebot3_drive
+[32.523s] Invoked command in '/home/gideon/turtlebot3_ws/build/turtlebot3_drive' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/gideon/turtlebot3_ws/install/turtlebot3_teleop:/home/gideon/turtlebot3_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/gideon/turtlebot3_ws/build/turtlebot3_drive -- -j8 -l8
+[32.526s] Invoking command in '/home/gideon/turtlebot3_ws/build/turtlebot3_drive': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/gideon/turtlebot3_ws/install/turtlebot3_teleop:/home/gideon/turtlebot3_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/gideon/turtlebot3_ws/build/turtlebot3_drive
+[32.545s] -- Install configuration: ""
+[32.546s] -- Execute custom install script
+[32.547s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/lib/turtlebot3_drive/turtlebot3_drive
+[32.570s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/empty_world.launch.py
+[32.591s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/maze3x3.launch.py
+[32.612s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/maze4x4.launch.py
+[32.633s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/multi_robot.launch.py
+[32.655s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/multi_spawn_turtlebot3.launch.py
+[32.676s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/robot_state_publisher.launch.py
+[32.697s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/spawn_turtlebot3.launch.py
+[32.718s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/turtlebot3_autorace_2020.launch.py
+[32.740s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/turtlebot3_dqn_stage1.launch.py
+[32.761s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/turtlebot3_dqn_stage2.launch.py
+[32.782s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/turtlebot3_dqn_stage3.launch.py
+[32.803s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/turtlebot3_dqn_stage4.launch.py
+[32.824s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/turtlebot3_house.launch.py
+[32.839s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//launch/turtlebot3_world.launch.py
+[32.856s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive//rviz/tb3_drive.rviz
+[32.874s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/include//turtlebot3_drive/turtlebot3_drive.hpp
+[32.889s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/ament_index/resource_index/package_run_dependencies/turtlebot3_drive
+[32.905s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/ament_index/resource_index/parent_prefix_path/turtlebot3_drive
+[32.921s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/environment/ament_prefix_path.sh
+[32.937s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/environment/ament_prefix_path.dsv
+[32.952s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/environment/path.sh
+[32.969s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/environment/path.dsv
+[32.984s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/local_setup.bash
+[32.999s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/local_setup.sh
+[33.015s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/local_setup.zsh
+[33.030s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/local_setup.dsv
+[33.046s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/package.dsv
+[33.062s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/ament_index/resource_index/packages/turtlebot3_drive
+[33.078s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/cmake/ament_cmake_export_include_directories-extras.cmake
+[33.093s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/cmake/ament_cmake_export_dependencies-extras.cmake
+[33.108s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/cmake/turtlebot3_driveConfig.cmake
+[33.123s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/cmake/turtlebot3_driveConfig-version.cmake
+[33.139s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_drive/share/turtlebot3_drive/package.xml
+[33.158s] Invoked command in '/home/gideon/turtlebot3_ws/build/turtlebot3_drive' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/gideon/turtlebot3_ws/install/turtlebot3_teleop:/home/gideon/turtlebot3_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/gideon/turtlebot3_ws/build/turtlebot3_drive
