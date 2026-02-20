@@ -1,0 +1,30 @@
+[0.059s] Invoking command in '/home/gideon/turtlebot3_ws/build/turtlebot3_cartographer': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/gideon/turtlebot3_ws/install/turtlebot3_teleop:/home/gideon/turtlebot3_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/gideon/turtlebot3_ws/build/turtlebot3_cartographer -- -j8 -l8
+[0.162s] -- Found ament_cmake: 2.5.5 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.761s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.994s] -- Configuring done (0.9s)
+[1.007s] -- Generating done (0.0s)
+[1.010s] -- Build files have been written to: /home/gideon/turtlebot3_ws/build/turtlebot3_cartographer
+[1.059s] Invoked command in '/home/gideon/turtlebot3_ws/build/turtlebot3_cartographer' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/gideon/turtlebot3_ws/install/turtlebot3_teleop:/home/gideon/turtlebot3_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/gideon/turtlebot3_ws/build/turtlebot3_cartographer -- -j8 -l8
+[1.079s] Invoking command in '/home/gideon/turtlebot3_ws/build/turtlebot3_cartographer': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/gideon/turtlebot3_ws/install/turtlebot3_teleop:/home/gideon/turtlebot3_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/gideon/turtlebot3_ws/build/turtlebot3_cartographer
+[1.098s] -- Install configuration: ""
+[1.098s] -- Execute custom install script
+[1.099s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/config/turtlebot3_lds_2d.lua
+[1.102s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/launch/cartographer.launch.py
+[1.103s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/launch/occupancy_grid.launch.py
+[1.106s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/rviz/tb3_cartographer.rviz
+[1.106s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/ament_index/resource_index/package_run_dependencies/turtlebot3_cartographer
+[1.107s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/ament_index/resource_index/parent_prefix_path/turtlebot3_cartographer
+[1.108s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/environment/ament_prefix_path.sh
+[1.110s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/environment/ament_prefix_path.dsv
+[1.110s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/environment/path.sh
+[1.111s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/environment/path.dsv
+[1.112s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/local_setup.bash
+[1.114s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/local_setup.sh
+[1.115s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/local_setup.zsh
+[1.116s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/local_setup.dsv
+[1.117s] -- Symlinking: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/package.dsv
+[1.137s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/ament_index/resource_index/packages/turtlebot3_cartographer
+[1.138s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/cmake/turtlebot3_cartographerConfig.cmake
+[1.140s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/cmake/turtlebot3_cartographerConfig-version.cmake
+[1.141s] -- Up-to-date symlink: /home/gideon/turtlebot3_ws/install/turtlebot3_cartographer/share/turtlebot3_cartographer/package.xml
+[1.163s] Invoked command in '/home/gideon/turtlebot3_ws/build/turtlebot3_cartographer' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/gideon/turtlebot3_ws/install/turtlebot3_teleop:/home/gideon/turtlebot3_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/gideon/turtlebot3_ws/build/turtlebot3_cartographer
