@@ -14,6 +14,7 @@ NET_RESPONSE = 25
 
 PACKET_INCOMPLETE = 30
 
+# A watcher thread that responds to events on the queue
 class QueueEvent():
     def __init__(self, type: int, device, **kwargs):
         self.type = type
