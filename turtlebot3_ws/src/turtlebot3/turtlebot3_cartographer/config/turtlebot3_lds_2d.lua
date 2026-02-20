@@ -12,9 +12,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- /* Author: Darby Lim */
+-- Author: Darby Lim
 
--- /* Modified by: Gideon Tladi */
+-- Modified by: Gideon Tladi
 
 include "map_builder.lua"
 include "trajectory_builder.lua"
@@ -23,8 +23,8 @@ options = {
   map_builder = MAP_BUILDER,
   trajectory_builder = TRAJECTORY_BUILDER,
   map_frame = "map",
-  tracking_frame = "base_footprint",  /* Changed from "imu_link"  */
-  published_frame = "odom",
+  tracking_frame = "base_footprint",  -- Changed from "imu_link"  to "base_footprint"
+  published_frame = "base_footprint",
   odom_frame = "odom",
   provide_odom_frame = false,
   publish_frame_projected_to_2d = true,
@@ -48,8 +48,13 @@ options = {
 
 MAP_BUILDER.use_trajectory_builder_2d = true
 
+-- Reduce number of subdivisions per laser scan
+TRAJECTORY_BUILDER_2D.num_subdivisions_per_laser_scan = 1  -- keeps default, fine for Burger lidar
+
+-- Optional parameters to reduce scan load
 TRAJECTORY_BUILDER_2D.min_range = 0.12
 TRAJECTORY_BUILDER_2D.max_range = 3.5
+
 TRAJECTORY_BUILDER_2D.missing_data_ray_length = 3.
 TRAJECTORY_BUILDER_2D.use_imu_data = false
 TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true 
@@ -58,6 +63,11 @@ TRAJECTORY_BUILDER_2D.motion_filter.max_angle_radians = math.rad(0.1)
 POSE_GRAPH.constraint_builder.min_score = 0.65
 POSE_GRAPH.constraint_builder.global_localization_min_score = 0.7
 
--- POSE_GRAPH.optimize_every_n_nodes = 0
+-- Optionally, reduce frequency of publishing points to RViz
+TRAJECTORY_BUILDER_2D.submaps.num_range_data = 90  -- increase from default 35, reduces intermediate messages
+POSE_GRAPH.optimize_every_n_nodes = 90           -- reduce graph optimization frequency
+
+-- For Gazebo acceleration
+real_time_factor = 1  -- 1.2 means it runs 20% faster than wall-clock time
 
 return options

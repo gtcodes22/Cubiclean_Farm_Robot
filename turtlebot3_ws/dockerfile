@@ -1,0 +1,46 @@
+FROM osrf/ros:jazzy-desktop
+
+SHELL ["/bin/bash", "-c"]
+WORKDIR /app
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TURTLEBOT3_MODEL=burger
+ENV ROS_DOMAIN_ID=30
+
+# Install Gazebo Harmonic + TurtleBot3 + Navigation + SLAM
+RUN apt update && apt install -y \
+    ros-jazzy-ros-gz \
+    ros-jazzy-ros-gz-sim \
+    ros-jazzy-ros-gz-bridge \
+    ros-jazzy-turtlebot3 \
+    ros-jazzy-turtlebot3-simulations \
+    ros-jazzy-navigation2 \
+    ros-jazzy-nav2-bringup \
+    ros-jazzy-slam-toolbox \
+    ros-jazzy-cartographer \
+    ros-jazzy-cartographer-ros \
+    python3-colcon-common-extensions \
+    dos2unix \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy workspace
+COPY src turtlebot3_ws/src
+
+# Fix Lua line endings for Cartographer (only if the folder exists)
+RUN apt-get update && apt-get install -y dos2unix && \
+    [ -d /app/turtlebot3_ws/src/turtlebot3_cartographer ] && \
+    find /app/turtlebot3_ws/src/turtlebot3_cartographer/ -name "*.lua" -exec dos2unix {} \; \
+    || echo "No turtlebot3_cartographer folder found, skipping"
+
+# Build your workspace (if you have custom packages)
+RUN cd turtlebot3_ws && \
+    source /opt/ros/jazzy/setup.bash && \
+    colcon build --symlink-install
+
+# Copy entrypoint
+COPY entrypoint.sh /
+ENTRYPOINT ["/entrypoint.sh"]
+RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc && \
+    echo "source /app/turtlebot3_ws/install/setup.bash" >> /root/.bashrc
+
+CMD ["bash"]
