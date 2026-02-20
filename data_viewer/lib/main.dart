@@ -7,6 +7,7 @@ import 'socket_service.dart';
 import 'pages/network_page.dart';
 import 'pages/test_page.dart';
 import 'pages/about_page.dart';
+import 'pages/webview_page.dart';
 
 /// DO NOT RUN THIS PROGRAM VIA THE WEB APP DEBUGGER, AS THE DART:IO
 /// LIBRARY IS NOT COMPATIBLE.
@@ -36,25 +37,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int pageIndex = 0;
-  int numberOfMessages = 0;
-
-  // any messages sent to/from the app
-  List<String> netMessages = [];
-  String addr = "";
-  var attemptConnect = false;
-
-  void _serverConnect(String addr) async {
-    SocketService().initializeSocket(addr, netMessages, _newMessage);
-  }
-
-  // gets called whenever there's a new network message
-  void _newMessage(String newMessage) {
-    setState(() {
-      numberOfMessages++;
-      netMessages.add(newMessage);
-    });
-  }
+  int pageIndex = 2;
+  SocketService socketService = SocketService();
 
   /// The following code is adapted from one of the flutter tutorials
   @override
@@ -68,11 +52,9 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         page = TestPage(title: 'Bed Health Inspector');
       case 2:
-        page = MyNetworkPage(title: 'Network Debug Function',
-          addrChange: _serverConnect,
-          netMessages : netMessages);
+        page = MyNetworkPage(title: 'Network Debug Function', socketService: socketService);
       case 3:
-        page = TestPage(title: 'Test Page');
+        page = WebViewPage(title: 'WebView Page');
       case 4:
         page = AboutPage(title: 'About Data Viewer...');
       default:
@@ -105,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.handyman),
-                      label: Text('Test Page'),
+                      label: Text('WebView Page'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.question_mark),

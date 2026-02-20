@@ -1,43 +1,47 @@
 import 'package:flutter/material.dart';
+import 'packet.dart';
 import 'dart:io';
 import 'dart:convert';
 //import 'dart:async';
 
 class SocketService {
   static bool isConnected = false;
-  static Socket? _socket;
+  static Socket? socket;
+  List<PacketMessage> messages = [];
 
-  static Socket? getSocket() => _socket;
-  static bool connected() => isConnected;
+  SocketService();
 
-  void initializeSocket(String ipPort, List<String> netMessages, ValueChanged<String> newMessage) async {
-  // Configure the socket connection
-    
+  Socket? getSocket() => socket;
+  bool connected() => isConnected;
+  PacketMessage getMessage(int i) => messages[i];
+  List<PacketMessage> getMessages() => messages;
+  int totalMessages() => messages.length;
+
+  void connectToServer(String ipPort) async {
+    // default server ip address and port
     var address = InternetAddress.loopbackIPv4;
-    int port = 8002;
+    int port = 1991;
 
+    // if an address is specified, use that rather than the default
     if (ipPort.isNotEmpty) {
       List<String> words = ipPort.split(':');
       address = InternetAddress(words[0]);
       port = int.parse(words[1]);
     }
 
-    Socket socket = await Socket.connect(address, port);
+    // if an exisiting connection is still open, close it
+    if (connected()) {dispose();}
+
+    // open socket
+    socket = await Socket.connect(address, port);
     isConnected = true;
-    _socket = socket;
 
-    socket.listen(
+    // listen for messages
+    socket?.listen(
       (dynamic message) {
-        // from: https://stackoverflow.com/questions/28565242/convert-uint8list-to-string-with-dart
-        String sMessage = String.fromCharCodes(message);
-        debugPrint("Recieved message: $sMessage");
-
         // add incoming message to the received messages list
-        //netMessages.add(sMessage);
-
-        // calling this updates the NetworkPageState with the new received message
-        //getMessage();
-        newMessage(sMessage);
+        messages.add(PacketMessage(message));
+        debugPrint("Recieved network message");
       },
       onDone: () {
         isConnected = false;
@@ -50,16 +54,19 @@ class SocketService {
     );
   }
 
-  static void sendMessage(String message, {bool noNewLine = false}) {
+  void sendMessage(String message, {bool noNewLine = false}) {
     if (!isConnected) {
       debugPrint("not connected, can't send message");
       return;
     }
-    _socket?.add(utf8.encode(message + (noNewLine ? '' : '\r\n') ));
-    _socket?.flush();
+    socket?.add(utf8.encode(message + (noNewLine ? '' : '\r\n') ));
+    socket?.flush();
   }
 
+
+
   void dispose() {
-    _socket?.close();
+    socket?.close();
+    isConnected = false;
   }
 }
