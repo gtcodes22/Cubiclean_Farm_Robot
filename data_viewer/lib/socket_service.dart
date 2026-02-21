@@ -5,9 +5,10 @@ import 'dart:convert';
 //import 'dart:async';
 
 class SocketService {
-  static bool isConnected = false;
-  static Socket? socket;
+  bool isConnected = false;
+  Socket? socket;
   List<PacketMessage> messages = [];
+  ValueNotifier<bool>? newMessageNotifier;
 
   SocketService();
 
@@ -41,6 +42,7 @@ class SocketService {
       (dynamic message) {
         // add incoming message to the received messages list
         messages.add(PacketMessage(message));
+        newMessageNotifier?.value = true;
         debugPrint("Recieved network message");
       },
       onDone: () {
@@ -59,11 +61,25 @@ class SocketService {
       debugPrint("not connected, can't send message");
       return;
     }
+
+    // create a new packet message to send, with the data as the message string
+    PacketMessage packet = PacketMessage.newPacket('APP', 'SPC', 'MSG', message);
+
+    // for now, just send the data as a string, but in the future we can
+    // change this to send the whole packet as bytes
     socket?.add(utf8.encode(message + (noNewLine ? '' : '\r\n') ));
     socket?.flush();
+
+    debugPrint("Sent network message");
+    messages.add(packet);
   }
 
-
+  void setNewMessageNotifier(ValueNotifier<bool> notifier) {
+    // This method would be used to set a notifier that can be used to update UI elements
+    // when new messages are received. For example, it could be passed to the network page
+    // so that it knows when to rebuild its list of messages.
+    newMessageNotifier = notifier;
+  }
 
   void dispose() {
     socket?.close();

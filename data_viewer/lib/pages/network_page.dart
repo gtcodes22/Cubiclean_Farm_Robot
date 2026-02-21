@@ -24,16 +24,21 @@ class MyNetworkPage extends StatefulWidget {
 class _MyNetworkPageState extends State<MyNetworkPage> {
   final myController = TextEditingController();
   final addrTextController = TextEditingController();
+  ValueNotifier<bool> updateWidget = ValueNotifier(false);
 
   void _serverConnect() {
-    return;
+    setState(() {
+      widget.socketService.connectToServer(addrTextController.text);
+    });
   }
 
   void _sendMsg() {
     String message = myController.text;
-    myController.clear();
-    widget.socketService.sendMessage(message, noNewLine: false);
-
+    
+    setState(() {
+      myController.clear();
+      widget.socketService.sendMessage(message, noNewLine: false);
+    });
   }
 
   Widget _formatMessage(PacketMessage packet, int num) {
@@ -59,20 +64,29 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
       );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget buildMessageList() 
+  {
     List<Widget> widgetChildren = [];
-
     for (int i = 0; i < widget.socketService.totalMessages(); i++) {
       widgetChildren.add(_formatMessage(widget.socketService.getMessage(i), i));
     }
-
-    Widget netMsg = ListView(
+    updateWidget.value = false;
+    return ListView(
       padding: const EdgeInsets.all(8),
       children: widgetChildren,
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    addrTextController.text = '127.0.0.1:1991';
+    widget.socketService.setNewMessageNotifier(updateWidget);
+
+    Widget netMsg = ValueListenableBuilder<bool>(
+      valueListenable: updateWidget,
+      builder:(context, value, child) => buildMessageList(),
+      child: null,
     );
-
-
 
     return Scaffold(
       appBar: AppBar(
@@ -119,9 +133,14 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
                       // https://stackoverflow.com/questions/72153633/flutter-submit-textformfield-on-enter
                       onFieldSubmitted: (value) { _serverConnect(); },
                       controller: addrTextController,
+                      readOnly: widget.socketService.connected() ? true : false,
+                      style: TextStyle(
+                        color: widget.socketService.connected() ? Colors.grey : Colors.black,
+                      ),
                       decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Server IP:Port',
+                        border: OutlineInputBorder(),
+                        hintText: 'Server IP:Port',
+
                       ),
                     ),
                   )

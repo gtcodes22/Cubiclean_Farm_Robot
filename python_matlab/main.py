@@ -32,8 +32,14 @@ def send_msg_to_server(sock, StringData):
     # send to server
     sock.sendall(packet)
 
-def send_csv_data_to_server():
-    pass
+def send_csv_data_to_server(sock, StringData):
+    # 
+    # convert string data to bytes
+    packet = construct_packet('RPI', 'SPC', 'DAT', StringData)
+    
+    # send to server
+    sock.sendall(packet)
+    
 
 if __name__ == "__main__":
     # set up arguments for script
