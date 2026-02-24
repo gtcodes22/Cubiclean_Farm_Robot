@@ -1,1 +1,0 @@
-/home/gideon/turtlebot3_ws/src/turtlebot3/turtlebot3_drive/launch/empty_world.launch.py
