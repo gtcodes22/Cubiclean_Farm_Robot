@@ -9,7 +9,7 @@
   @data 2026-02-18
 '''
 
-# libraries 2
+# libraries 2 ...
 import matlab.engine
 from PIL import Image
 from os import getcwd
