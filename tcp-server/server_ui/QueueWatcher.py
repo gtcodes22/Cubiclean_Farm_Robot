@@ -42,7 +42,7 @@ class QueueWatcher(QThread):
                     self.newNetMessage.emit(msg, queueEvent.device, 'SPC')
                 
                 elif queueEvent.type == SERVER_END:
-                    #self.serverEND.emit()
+                    self.serverEND.emit()
                     
                     return
                 

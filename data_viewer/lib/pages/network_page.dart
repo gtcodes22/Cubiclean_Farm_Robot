@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../socket_service.dart';
 import '../packet.dart';
+import '../chat_bubble.dart';
 
 // Simple test function to check a widget is working as intended.
 void testClick() {
@@ -25,10 +26,15 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
   final myController = TextEditingController();
   final addrTextController = TextEditingController();
   ValueNotifier<bool> updateWidget = ValueNotifier(false);
+  bool plainTextMessages = false;
 
   void _serverConnect() {
     setState(() {
-      widget.socketService.connectToServer(addrTextController.text);
+      if (widget.socketService.connected()) {
+        widget.socketService.dispose();
+      } else {
+        widget.socketService.connectToServer(addrTextController.text);
+      }
     });
   }
 
@@ -37,13 +43,14 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
     
     setState(() {
       myController.clear();
-      widget.socketService.sendMessage(message, noNewLine: false);
+      widget.socketService.sendMessage(message, plainTextMessage: plainTextMessages);
     });
   }
 
   Widget _formatMessage(PacketMessage packet, int num) {
     // ignore: prefer_interpolation_to_compose_strings
-    String message = "$num: " + packet.getData();
+    //String message = "[$num][${packet.getSRC()}]: " + packet.getData();
+    /*
     var mColour = Colors.amber[600];
 
     switch (packet.getSRC()) {
@@ -53,15 +60,23 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
       case 'RPI':
         mColour = const Color.fromARGB(255, 255, 0, 102);
         break;
+      case 'APP':
+        mColour = const Color.fromARGB(255, 0, 255, 102);
+        break;
+      case 'UNK':
+        mColour = Colors.amber[600];
+        break;
       default:
         mColour = Colors.amber[600];
     }
-
+    
     return Container(
         height: 50,
         color: mColour,
-          child: Center(child: Text(message)),
+          child: packet.getSRC() == 'APP' ? Center(child: Text(message)) : Center(child: Text(message)),
       );
+      */
+      return ChatBubble(packet: packet);
   }
 
   Widget buildMessageList() 
@@ -124,7 +139,7 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
           Padding(
             padding: EdgeInsets.all(8),
             child: Row(
-              spacing: 20,
+              spacing: 00,
               children: [
                 //ElevatedButton(onPressed: _getMessage, child: const Text('Refresh')),
                 Expanded(
@@ -145,6 +160,9 @@ class _MyNetworkPageState extends State<MyNetworkPage> {
                     ),
                   )
                 ),
+                Checkbox(checkColor: Colors.black, value: plainTextMessages, onChanged: (value) { setState(() {plainTextMessages = value!;}); },),
+                Text('Send as plain text'),
+                SizedBox(width: 10),
                 ElevatedButton(onPressed: _serverConnect, child: widget.socketService.connected() ? const Text('Disconnect') : Text('Connect')),
               ],
             ),

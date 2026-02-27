@@ -24,7 +24,7 @@ class _AboutPage extends State<AboutPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('App Version 0.1.1'),  // update this each revision
+            const Text('App Version 0.2.0'),  // update this each revision
             Text('Build Time: $sDate (UK timezone)'),
             const Text('Written by: Jade Cawley'),
           ],

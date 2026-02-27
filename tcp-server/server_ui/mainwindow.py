@@ -68,7 +68,7 @@ def sendMessage(ui, qMain, isPi = False):
     return packet
 
 def addToChatLog(ui, message, src, des, mType = 'MSG', lPixmap = None):
-    print('adding to chat log')
+    print(f'adding {mType} of len:{len(message)} from {src} to {des} to chat log')
     # from https://stackoverflow.com/questions/22255994/pyqt-adding-widgets-to-scrollarea-during-the-runtime
     label = QLabel()
     if mType == 'IMG':
@@ -206,7 +206,7 @@ class MainWindow(QMainWindow):
             des = 'APP'
             packet = construct_packet(src, des, 'IMG', content)
             self.server.appSocket.sendall(packet)
-            qMain.put(QueueEvent(NET_IMG, 'APP', data = packet.data))
+            self.qMain.put(QueueEvent(NET_IMG, 'APP', data = 'Image File'))
         
     def get_image(self):
         # get image filename

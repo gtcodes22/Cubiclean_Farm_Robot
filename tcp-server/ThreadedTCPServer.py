@@ -59,7 +59,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             pdata = ''
             try:
                 raw = self.request.recv(13)
-                pdata = str(raw, 'ascii')
+                pdata = str(raw, 'utf-8')
+                    
             except TimeoutError:
                 # may add a queue event here if necessary
                 #qMain.put('WAITING')
@@ -84,7 +85,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             if pdata.upper().startswith("/CLOSE"):
                 print(f'server: client {clientAddr} closed server')
                 # build packet and send reponse
-                dataOut = bytes(f'Server closed down', 'ascii')
+                dataOut = bytes(f'Server closed down', 'utf-8')
                 qMain.put(QueueEvent(SERVER_END, ''))
                 return
             
@@ -121,12 +122,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     # request rest of packet
                     data = ''
                     try:
-                        data = str(self.request.recv(length + 3), 'ascii')
-                    except timeout:
+                        data = str(self.request.recv(length + 5), 'utf-8')
+                    except TimeoutError:
                         # add a queue event here if needed
                         #qMain.put('INCOMPLETE PACKET')
                         print(f"server: got incomplete packet from {clientAddr}")
                         continue
+                    except ConnectionResetError:
+                        print(f"server: connection with {clientAddr} terminated without a proper goodbye :(")
+                        if device != 'Unknown':
+                            qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
+                        exit()
                 
                     # construct Packet object
                     packet = PacketMessage(self.client_address[0], pdata + data)
@@ -137,6 +143,10 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                         device = packet.src
                         qMain.put(QueueEvent(DEVICE_CONNECTED, device,
                             socket = self.request))
+                        if device == 'APP':
+                            self.server.appSocket = self.request
+                        elif device == 'RPI':
+                            self.server.botSocket = self.request
                             
                     # print data recieved to terminal
                     if packet.mtype == 'MSG':
@@ -144,7 +154,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                         
                         # these messages are commands handled by the server
                         qMain.put(QueueEvent(NET_MSG, device, msg = packet.data))
-                        message_handler(packet)
+                        self.message_handler(packet)
                         
                     else:
                         print(f"server: Recv {packet.mtype}({packet.length} bytes) from {packet.src}")
@@ -173,7 +183,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 self.request.settimeout(0.01)
                 try:
                     raw = self.request.recv(4096)
-                    pdata += str(raw, 'ascii')
+                    pdata += str(raw, 'utf-8')
                 except TimeoutError:
                     pass
                     
@@ -185,7 +195,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 
                 # echo whole message back to client
                 print(f"server: echo '{pdata.rstrip()}' to {clientAddr}")
-                self.request.sendall(bytes(pdata, 'ascii'))
+                self.request.sendall(bytes(pdata, 'utf-8'))
                 qMain.put(QueueEvent(NET_RESPONSE, device, msg = pdata))
                 
             """
