@@ -38,7 +38,6 @@ def main():
     
     # get server IP address and port number
     ip, port = server.server_address
-    print(f'main: establishing server @ {ip}:{port}')
     
     # create a thread which uses server.start as the starting function,
     # providing qMain and qThread as arguments
@@ -48,7 +47,13 @@ def main():
     # A 'daemon' thread terminates when the main thread terminates
     server_thread.daemon = True
     
+    # debug print server ip and port
+    #print(f'main: establishing server @ {ip}:{port}')
+    
+    # moved to qMain 
+    '''
     # start server thread and wait 0.5 seconds
+    print(f'main: establishing server @ {ip}:{port}')
     server_thread.start()
     time.sleep(0.5)
     
@@ -58,9 +63,10 @@ def main():
         return
     
     print(f"main: Server loop running in thread: {server_thread.name}")
+    '''
     
     # start running the QT app
-    mainwindow.qMain(server, qMain, qThread)
+    mainwindow.start_ui(server, server_thread, qMain, qThread)
     
     # once the QT closes, shutdown the server and exit
     print("main: exiting program")

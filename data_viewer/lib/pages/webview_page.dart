@@ -8,18 +8,19 @@ import 'package:webview_windows/webview_windows.dart';
 final navigatorKey = GlobalKey<NavigatorState>();
 
 class WebViewPage extends StatefulWidget {
-  const WebViewPage({super.key, required this.title});
+  const WebViewPage({super.key, required this.title, required this.url});
   final String title;
+  final String url;
 
   @override
-  State<WebViewPage> createState() => _WebViewPage();
+  State<WebViewPage> createState() => WebViewPageState();
 }
 
 // build from simple_example.dart, which is a flutter tutorial on using
 // webview_flutter. This will be used to display a web page with more
 // information about the data viewer, or to display a live feed of the data
 // https://github.com/flutter/packages/tree/main/packages/webview_flutter/webview_flutter
-class _WebViewPage extends State<WebViewPage> {
+class WebViewPageState extends State<WebViewPage> {
     final _controller = WebviewController();
   final _textController = TextEditingController();
   final List<StreamSubscription> _subscriptions = [];
@@ -53,7 +54,7 @@ class _WebViewPage extends State<WebViewPage> {
 
       await _controller.setBackgroundColor(Colors.transparent);
       await _controller.setPopupWindowPolicy(WebviewPopupWindowPolicy.deny);
-      await _controller.loadUrl('https://flutter.dev');
+      await _controller.loadUrl(widget.url);
 
       if (!mounted) return;
       setState(() {});
@@ -89,47 +90,51 @@ class _WebViewPage extends State<WebViewPage> {
       return const Text(
         'Not Initialized',
         style: TextStyle(
-          fontSize: 24.0,
+          fontSize: 12.0,
           fontWeight: FontWeight.w900,
         ),
       );
     } else {
       return Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(0),
         child: Column(
           children: [
-            Card(
-              elevation: 0,
-              child: Row(children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'URL',
-                      contentPadding: EdgeInsets.all(10.0),
+            Container(
+              height: 32,
+              child:Card(
+                elevation: 0,
+                child: Row(children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'URL',
+                        contentPadding: EdgeInsets.all(10.0),
+                      ),
+                      textAlignVertical: TextAlignVertical.center,
+                      controller: _textController,
+                      onSubmitted: (val) {
+                        _controller.loadUrl(val);
+                      },
                     ),
-                    textAlignVertical: TextAlignVertical.center,
-                    controller: _textController,
-                    onSubmitted: (val) {
-                      _controller.loadUrl(val);
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.refresh),
+                    splashRadius: 20,
+                    onPressed: () {
+                      _controller.reload();
                     },
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.refresh),
-                  splashRadius: 20,
-                  onPressed: () {
-                    _controller.reload();
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.developer_mode),
-                  tooltip: 'Open DevTools',
-                  splashRadius: 20,
-                  onPressed: () {
-                    _controller.openDevTools();
-                  },
-                )
-              ]),
+                  IconButton(
+                    icon: Icon(Icons.developer_mode),
+                    tooltip: 'Open DevTools',
+                    splashRadius: 20,
+                    onPressed: () {
+                      _controller.openDevTools();
+                    },
+                  )
+                ]),
+              ),
+              //color: Colors.grey,
             ),
             Expanded(
                 child: Card(
@@ -160,6 +165,11 @@ class _WebViewPage extends State<WebViewPage> {
     }
   }
 
+  void reload() {
+    setState(() { _controller.loadUrl(widget.url);});
+    debugPrint('Reloading WebView with URL: ${widget.url}');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,10 +188,14 @@ class _WebViewPage extends State<WebViewPage> {
         child: Icon(_isWebviewSuspended ? Icons.play_arrow : Icons.pause),
       ),
       appBar: AppBar(
+        toolbarHeight: 20,
           title: StreamBuilder<String>(
         stream: _controller.title,
         builder: (context, snapshot) {
           return Text(
+            style: TextStyle(
+              fontSize: 12.0,
+            ),
               snapshot.hasData ? snapshot.data! : 'WebView (Windows) Example');
         },
       )),

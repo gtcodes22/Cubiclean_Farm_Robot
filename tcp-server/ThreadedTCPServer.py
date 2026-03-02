@@ -9,6 +9,7 @@ from select import select
 from packet import PacketMessage, construct_packet, is_valid_packet, is_valid_properties
 from is_socket_closed import *
 from QueueEvent import *
+from threading import current_thread
 
 import struct
 
@@ -17,7 +18,8 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     def start(self,qMain,qThread):
         self.qMain = qMain      # queue for sending messages to main thread
         self.qThread = qThread  # queue for recieving messages from main
-                                # thread
+                                # thread      
+        self.thread = current_thread()
         self.appSocket = None
         self.botSocket = None
         

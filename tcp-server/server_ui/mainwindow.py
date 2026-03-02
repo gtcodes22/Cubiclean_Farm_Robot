@@ -4,7 +4,7 @@ import struct
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QLabel
 from PySide6.QtCore import Qt, QObject, QThread, Signal, Slot, QSize#, pyqtSignal
-from PySide6.QtGui import QPixmap, QIcon, QImage
+from PySide6.QtGui import QPixmap, QIcon, QImage, QGuiApplication
 #from PySide6 import QtUiTools
 
 # Important:
@@ -13,8 +13,12 @@ from PySide6.QtGui import QPixmap, QIcon, QImage
 #     pyside2-uic form.ui -o ui_form.py
 from server_ui.ui_form import Ui_MainWindow
 from server_ui.QueueWatcher import QueueWatcher
+from server_ui.LoadWorker import LoadWorker
+from server_ui.ui_SplashScreen import Ui_MainWindow as ui_splashscreen
+from server_ui.SplashScreen import SplashScreen
 from packet import construct_packet
 from QueueEvent import *
+import time
 
 def clickTest():
     print("click!")
@@ -76,13 +80,13 @@ def addToChatLog(ui, message, src, des, mType = 'MSG', lPixmap = None):
         label.setPixmap(lPixmap)
     elif mType == 'MSG' and src == 'APP':
         label.setText(f'{src}: {message.rstrip()}')
-        label.setStyleSheet("background-color: darkGreen")
+        label.setStyleSheet("color: white;background-color: rgb(139, 195, 74);")
     elif mType == 'MSG' and src == 'RPI':
         label.setText(f'{src}: {message.rstrip()}')
-        label.setStyleSheet("background-color: darkRed")
+        label.setStyleSheet("color: white;background-color: rgb(244, 67, 54);")
     elif mType == 'MSG' and src == 'SPC':
         label.setText(f'{src}: {message.rstrip()}')
-        label.setStyleSheet("background-color: darkBlue")
+        label.setStyleSheet("color: white;background-color: rgb(3, 169, 244);")
     
     widget = ui.scrollAreaWidgetContents_2
     if src == 'RPI' or des == 'RPI':
@@ -265,12 +269,31 @@ class MainWindow(QMainWindow):
         print(f'{fileName[0]}')
         return fileName[0]
 
-def qMain(server, qMain, qThread):
+def start_ui(server, serverThread, qMain, qThread):
+    # start QApplication
     app = QApplication(sys.argv)
+    
+    # force light mode
+    QGuiApplication.styleHints().setColorScheme(Qt.ColorScheme.Light)
+        
+    # set up worker thread to start TCP Server and Dartly HTTP server
+    loaderThread = LoadWorker(qMain, server, serverThread)
+    
+    # main program widget
     widget = MainWindow(server, qMain, qThread)
-    widget.show()
-    #sys.exit(app.exec())
+    
+    # splash screen widget
+    splash = SplashScreen(widget, loaderThread)
+    
+    # show splash screen
+    splash.show()
+    splash.raise_()
+
+    # start executing QApp
     app.exec()
+    
+    #sys.exit(app.exec())
+    #app.exec()
 
 if __name__ == "__main__":
-    qMain()
+    start_ui()

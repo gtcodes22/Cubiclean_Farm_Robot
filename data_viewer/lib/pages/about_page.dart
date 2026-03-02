@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:data_viewer/common/build/app_build_timestamp.g.dart';
+import 'package:data_viewer/src/utils/build_info.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key, required this.title});
@@ -24,8 +25,8 @@ class _AboutPage extends State<AboutPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('App Version 0.2.0'),  // update this each revision
-            Text('Build Time: $sDate (UK timezone)'),
+            const Text('App Version 0.2.1'),  // update this each revision
+            Text('Build Time: $BUILD_TIMESTAMP (UK timezone)'),
             const Text('Written by: Jade Cawley'),
           ],
         ),

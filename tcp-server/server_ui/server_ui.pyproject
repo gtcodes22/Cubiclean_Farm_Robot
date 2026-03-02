@@ -1,6 +1,9 @@
 {
     "files": [
         "mainwindow.py",
-        "form.ui"
+        "form.ui",
+        "SplashScreen.py",
+        "SplashScreen.ui",
+        "images.qrc"
     ]
 }

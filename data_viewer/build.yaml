@@ -5,3 +5,8 @@ builders:
     build_extensions: {'.dart': ['.my_gen.dart']}
     auto_apply: root_package
     build_to: source
+  my_timestamp_builder:
+    import: "package:data_viewer/src/utils/build_tool.dart"
+    builder_factories: ["myTimestampBuilderFactory"]
+    build_extensions: {".dart": [".dart_whatever"]}
+    auto_apply: all_packages

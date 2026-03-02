@@ -64,3 +64,4 @@ CATKIN_IGNORE
 *.pyc
 /tcp-server/__pycache__
 *.pyc
+data_viewer/Release Build.lnk
