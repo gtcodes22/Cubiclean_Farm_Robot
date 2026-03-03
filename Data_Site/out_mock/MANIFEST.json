@@ -1,0 +1,278 @@
+{
+  "sampling_period_s": 5.0,
+  "rows_per_file": 72,
+  "beds": [
+    {
+      "bed": "BED1",
+      "ts": "2026-02-24_0900",
+      "profile": "clean"
+    },
+    {
+      "bed": "BED2",
+      "ts": "2026-02-24_0915",
+      "profile": "amber"
+    },
+    {
+      "bed": "BED3",
+      "ts": "2026-02-24_0930",
+      "profile": "dirty"
+    },
+    {
+      "bed": "BED4",
+      "ts": "2026-02-24_0945",
+      "profile": "mixed"
+    }
+  ],
+  "point_behaviour": {
+    "clean": {
+      "1": "clean",
+      "2": "clean",
+      "3": "clean",
+      "4": "clean",
+      "5": "clean",
+      "6": "clean"
+    },
+    "amber": {
+      "1": "clean",
+      "2": "clean",
+      "3": "nh3_transient",
+      "4": "clean",
+      "5": "co2_transient",
+      "6": "clean"
+    },
+    "dirty": {
+      "1": "dirty_manure",
+      "2": "dirty_manure",
+      "3": "dirty_mixed",
+      "4": "dirty_manure",
+      "5": "dirty_mixed",
+      "6": "dirty_manure"
+    },
+    "mixed": {
+      "1": "clean",
+      "2": "dirty_manure",
+      "3": "nh3_settling",
+      "4": "h2s_transient",
+      "5": "co2_high_cleanish",
+      "6": "dirty_ch4"
+    }
+  },
+  "files": [
+    {
+      "file": "BED1_P1_2026-02-24_0900.csv",
+      "bed": "BED1",
+      "point": 1,
+      "timestamp": "2026-02-24_0900",
+      "profile": "clean",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED1_P2_2026-02-24_0900.csv",
+      "bed": "BED1",
+      "point": 2,
+      "timestamp": "2026-02-24_0900",
+      "profile": "clean",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED1_P3_2026-02-24_0900.csv",
+      "bed": "BED1",
+      "point": 3,
+      "timestamp": "2026-02-24_0900",
+      "profile": "clean",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED1_P4_2026-02-24_0900.csv",
+      "bed": "BED1",
+      "point": 4,
+      "timestamp": "2026-02-24_0900",
+      "profile": "clean",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED1_P5_2026-02-24_0900.csv",
+      "bed": "BED1",
+      "point": 5,
+      "timestamp": "2026-02-24_0900",
+      "profile": "clean",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED1_P6_2026-02-24_0900.csv",
+      "bed": "BED1",
+      "point": 6,
+      "timestamp": "2026-02-24_0900",
+      "profile": "clean",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED2_P1_2026-02-24_0915.csv",
+      "bed": "BED2",
+      "point": 1,
+      "timestamp": "2026-02-24_0915",
+      "profile": "amber",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED2_P2_2026-02-24_0915.csv",
+      "bed": "BED2",
+      "point": 2,
+      "timestamp": "2026-02-24_0915",
+      "profile": "amber",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED2_P3_2026-02-24_0915.csv",
+      "bed": "BED2",
+      "point": 3,
+      "timestamp": "2026-02-24_0915",
+      "profile": "amber",
+      "behaviour": "nh3_transient",
+      "rows": 72
+    },
+    {
+      "file": "BED2_P4_2026-02-24_0915.csv",
+      "bed": "BED2",
+      "point": 4,
+      "timestamp": "2026-02-24_0915",
+      "profile": "amber",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED2_P5_2026-02-24_0915.csv",
+      "bed": "BED2",
+      "point": 5,
+      "timestamp": "2026-02-24_0915",
+      "profile": "amber",
+      "behaviour": "co2_transient",
+      "rows": 72
+    },
+    {
+      "file": "BED2_P6_2026-02-24_0915.csv",
+      "bed": "BED2",
+      "point": 6,
+      "timestamp": "2026-02-24_0915",
+      "profile": "amber",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED3_P1_2026-02-24_0930.csv",
+      "bed": "BED3",
+      "point": 1,
+      "timestamp": "2026-02-24_0930",
+      "profile": "dirty",
+      "behaviour": "dirty_manure",
+      "rows": 72
+    },
+    {
+      "file": "BED3_P2_2026-02-24_0930.csv",
+      "bed": "BED3",
+      "point": 2,
+      "timestamp": "2026-02-24_0930",
+      "profile": "dirty",
+      "behaviour": "dirty_manure",
+      "rows": 72
+    },
+    {
+      "file": "BED3_P3_2026-02-24_0930.csv",
+      "bed": "BED3",
+      "point": 3,
+      "timestamp": "2026-02-24_0930",
+      "profile": "dirty",
+      "behaviour": "dirty_mixed",
+      "rows": 72
+    },
+    {
+      "file": "BED3_P4_2026-02-24_0930.csv",
+      "bed": "BED3",
+      "point": 4,
+      "timestamp": "2026-02-24_0930",
+      "profile": "dirty",
+      "behaviour": "dirty_manure",
+      "rows": 72
+    },
+    {
+      "file": "BED3_P5_2026-02-24_0930.csv",
+      "bed": "BED3",
+      "point": 5,
+      "timestamp": "2026-02-24_0930",
+      "profile": "dirty",
+      "behaviour": "dirty_mixed",
+      "rows": 72
+    },
+    {
+      "file": "BED3_P6_2026-02-24_0930.csv",
+      "bed": "BED3",
+      "point": 6,
+      "timestamp": "2026-02-24_0930",
+      "profile": "dirty",
+      "behaviour": "dirty_manure",
+      "rows": 72
+    },
+    {
+      "file": "BED4_P1_2026-02-24_0945.csv",
+      "bed": "BED4",
+      "point": 1,
+      "timestamp": "2026-02-24_0945",
+      "profile": "mixed",
+      "behaviour": "clean",
+      "rows": 72
+    },
+    {
+      "file": "BED4_P2_2026-02-24_0945.csv",
+      "bed": "BED4",
+      "point": 2,
+      "timestamp": "2026-02-24_0945",
+      "profile": "mixed",
+      "behaviour": "dirty_manure",
+      "rows": 72
+    },
+    {
+      "file": "BED4_P3_2026-02-24_0945.csv",
+      "bed": "BED4",
+      "point": 3,
+      "timestamp": "2026-02-24_0945",
+      "profile": "mixed",
+      "behaviour": "nh3_settling",
+      "rows": 72
+    },
+    {
+      "file": "BED4_P4_2026-02-24_0945.csv",
+      "bed": "BED4",
+      "point": 4,
+      "timestamp": "2026-02-24_0945",
+      "profile": "mixed",
+      "behaviour": "h2s_transient",
+      "rows": 72
+    },
+    {
+      "file": "BED4_P5_2026-02-24_0945.csv",
+      "bed": "BED4",
+      "point": 5,
+      "timestamp": "2026-02-24_0945",
+      "profile": "mixed",
+      "behaviour": "co2_high_cleanish",
+      "rows": 72
+    },
+    {
+      "file": "BED4_P6_2026-02-24_0945.csv",
+      "bed": "BED4",
+      "point": 6,
+      "timestamp": "2026-02-24_0945",
+      "profile": "mixed",
+      "behaviour": "dirty_ch4",
+      "rows": 72
+    }
+  ]
+}
