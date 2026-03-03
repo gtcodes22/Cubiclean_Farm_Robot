@@ -915,7 +915,7 @@ def build_day_progression_display(All_sessions_map, App_state, Session_selector_
 if __name__ == "__main__":
     print("RUNNING FILE:", os.path.abspath(__file__))
 
-    CSV_Output_dir = r"C:\Users\brand\source\repos\out_mock"
+    CSV_Output_dir = r".\out_mock"
     Sampling_Period = 5.0
 
     Baseline_thresholds = {
@@ -1368,4 +1368,4 @@ if __name__ == "__main__":
             day_children,
             day_style
         )
-    app.run(host="192.168.56.1", port=8050, debug=False)
+    app.run(host="0.0.0.0", port=8050, debug=False)

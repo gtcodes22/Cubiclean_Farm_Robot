@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-
+'''!
+  @file Extract_Files.py
+  @brief 
+  @author Brandon-lee Craddock
+  @maintainer Jade Cawley
+  @version  V1.0
+  @data 2026-03-03
+'''
 import os
 import re
 import csv
 
-
+# get reading attributes from filename of the csv, using a regular expression match
 def Extract_filename(file_name):
     m = re.match(r"^(BED\d+)_P([1-6])_(\d{4}-\d{2}-\d{2}_\d{4})\.csv$", file_name)
     if not m:
@@ -17,21 +24,29 @@ def Extract_filename(file_name):
         "CSV_Path": file_name,
     }
 
-
+# get all valid .csv files and return the parsed results
 def idx_sample_csvs(CSV_Output_dir):
     rows = []
+    
+    # check if directory exists
     if not os.path.isdir(CSV_Output_dir):
         return rows
 
+    # parse each file in the directory
     for fn in os.listdir(CSV_Output_dir):
+        # only parse .csv files
         if not fn.lower().endswith(".csv"):
             continue
+        
+        # get dataset attributes from file, skip if failed
         parsed = Extract_filename(fn)
         if parsed is None:
             continue
+            
+        # amend csv file path to include the directory that the file is in
         parsed["CSV_Path"] = os.path.join(CSV_Output_dir, fn)
+        
         rows.append(parsed)
-
     return rows
 
 
@@ -631,7 +646,7 @@ def Refresh_session_visual_data(CSV_Output_dir, Sampling_Period, Baseline_thresh
 
 
 if __name__ == "__main__":
-    TEST_DIR = r"C:\Users\brand\source\repos\out_mock"
+    TEST_DIR = r".\out_mock"
 
     Baseline_thresholds_classify = {
         "Temp_Air": {"Min": -10.0, "Max": 45.0},
