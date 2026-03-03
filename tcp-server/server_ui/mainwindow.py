@@ -3,7 +3,7 @@ import sys
 import struct
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QLabel
-from PySide6.QtCore import Qt, QObject, QThread, Signal, Slot, QSize#, pyqtSignal
+from PySide6.QtCore import Qt, QObject, QThread, Signal, Slot, QSize, QTimer#, pyqtSignal
 from PySide6.QtGui import QPixmap, QIcon, QImage, QGuiApplication
 #from PySide6 import QtUiTools
 
@@ -19,20 +19,15 @@ from server_ui.SplashScreen import SplashScreen
 from packet import construct_packet
 from QueueEvent import *
 import time
+import socket
 
 def clickTest():
     print("click!")
 
 def returnTest():
     print("tap!")
-
-def appDebug(msg):
-    print(f'Debug log {msg}')
-    ui = Ui_MainWindow()
     
-    #ui.scrollAreaWidgetContents_appDebug
-    
-def sendMessage(ui, qMain, isPi = False):
+def sendMessage(ui, qMain, isPi = False, message = ''):
     # add src and destination to message
     src = 'SPC'
     des = 'APP'
@@ -46,14 +41,16 @@ def sendMessage(ui, qMain, isPi = False):
     end = '\x00\xA8\x6B'
     
     # string to hold message
-    msg = ''
+    msg = message
     
     if isPi:
-        msg = str(ui.lineEdit_rpi.text())
+        if msg == '':
+            msg = str(ui.lineEdit_rpi.text())
         ui.lineEdit_rpi.clear()
         qMain.put(QueueEvent(NET_RESPONSE, 'RPI', msg = msg))
     else:
-        msg = str(ui.lineEdit_app.text())
+        if msg == '':
+            msg = str(ui.lineEdit_app.text())
         ui.lineEdit_app.clear()
         qMain.put(QueueEvent(NET_RESPONSE, 'APP', msg = msg))
         
@@ -107,6 +104,11 @@ class MainWindow(QMainWindow):
         
         # Window icon
         self.setWindowIcon(QIcon('cow.png'))
+        self.ver = '0.2.2'
+        # need to incorporate being able to change the ports in the interface
+        self.port = 1991    
+        self.broadcastPort = 1995
+        self.broadcastIP = None
         
         # set up a qThread to watch the queues
         """
@@ -119,6 +121,29 @@ class MainWindow(QMainWindow):
         self.qwThread = QueueWatcher()
         self.qwThread.setQueue(self.qMain)
         self.qwThread.start()
+        
+        # get broadcast server ip
+        interfaces = socket.getaddrinfo(host=socket.gethostname(), port=None, family=socket.AF_INET)
+        allips = [ip[-1][0] for ip in interfaces]
+
+        # only broadcast on local area network
+        for ip in allips:
+            if ip.split('.')[2] in ('0', '1'):
+                self.broadcastIP = ip
+        
+        if self.broadcastIP:
+            self.appDebug(f'broadcasting on {self.broadcastIP}')
+            
+            # broadcast server ip timer
+            self.broadcast_timer = QTimer(self)
+            self.broadcast_timer.timeout.connect(self.server_broadcast)
+            self.broadcast_timer.start(2000)
+        else:
+            self.appDebug(f'w: could not get broadcast IP')
+        
+        self.update_timer = QTimer(self)
+        self.update_timer.timeout.connect(self.ping_for_update)
+        #self.update_timer.start(5000)
         
         # connect QueueWatcher signals
         #self.qwThread.newNetMessage.connect()
@@ -140,7 +165,7 @@ class MainWindow(QMainWindow):
         # Network Debug Chat page related signals
         self.ui.lineEdit_app.returnPressed.connect(self.sendMessageApp)
         self.ui.lineEdit_rpi.returnPressed.connect(self.sendMessageRPi)
-        self.ui.pushButton_connect_rpi.clicked.connect(clickTest)
+        #self.ui.pushButton_connect_rpi.clicked.connect(clickTest)
         
         self.ui.pushButton_app_sendImg.clicked.connect(self.get_image)
         self.ui.pushButton_app_sendDat.clicked.connect(self.get_dat_file)
@@ -150,7 +175,7 @@ class MainWindow(QMainWindow):
         self.qwThread.serverEND.connect(self.close_server)
         self.qwThread.deviceConnected.connect(self.device_connected)
         self.qwThread.deviceDisconnected.connect(self.device_disconnected)
-        self.qwThread.logQueueEvent.connect(self.ui.textEdit_DebugLog.append)
+        self.qwThread.logQueueEvent.connect(self.ui.textEdit_SystemLog.append)
 
     # from: https://www.w3resource.com/python-exercises/pyqt/python-pyqt-connecting-signals-to-slots-exercise-11.php
     def closeEvent(self, event):
@@ -167,6 +192,7 @@ class MainWindow(QMainWindow):
 
     @Slot(bool)
     def device_connected(self, arg):
+        self.ping_for_update()
         ui = self.ui
         if arg:
             ui.lineEdit_rpi.setEnabled(True)
@@ -179,6 +205,7 @@ class MainWindow(QMainWindow):
 
     @Slot(bool)
     def device_disconnected(self, arg):
+        self.ping_for_update()
         ui = self.ui
         if arg:
             ui.lineEdit_rpi.setEnabled(False)
@@ -268,7 +295,34 @@ class MainWindow(QMainWindow):
         
         print(f'{fileName[0]}')
         return fileName[0]
+    
+    # adapted from Source - https://stackoverflow.com/a/64067297
+    # Posted by Mario Camilleri, modified by community. See post 'Timeline' for change history
+    # Retrieved 2026-03-02, License - CC BY-SA 4.0
+    def server_broadcast(self):
+        msg = bytes(f'TCP Server {self.ver}', 'utf-8')
+        
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)  # UDP
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.bind((self.broadcastIP,0))
+        sock.sendto(msg, ("255.255.255.255", self.broadcastPort))
+        sock.close()
+        
+    def ping_for_update(self):
+        # if the app is connected
+        if self.server.appSocket:
+            sendMessage(self.ui, self.qMain, message = '/BATTERY')
+        
+        # if the turtlebot is connected
+        if self.server.botSocket:
+            sendMessage(self.ui, self.qMain, True, message='/BATTERY')
+            sendMessage(self.ui, self.qMain, True, message='/SPEEDCM')
+            sendMessage(self.ui, self.qMain, True, message='/PROGRESS')
 
+    def appDebug(self, msg):
+        print(msg)
+        self.ui.textEdit_SystemLog.append(msg)
+        
 def start_ui(server, serverThread, qMain, qThread):
     # start QApplication
     app = QApplication(sys.argv)

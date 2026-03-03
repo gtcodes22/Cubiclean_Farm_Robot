@@ -39,8 +39,19 @@ def send_csv_data_to_server(sock, StringData):
     
     # send to server
     sock.sendall(packet)
-    
 
+# functions that need developing
+def get_battery_life():
+    return 67
+
+# get speed in cm/s
+def get_speed_cm_ps():
+    return 15
+
+# get progress in percentage
+def get_progress():
+    return 50
+    
 if __name__ == "__main__":
     # set up arguments for script
     parser = argparse.ArgumentParser(description = 'TurtleBot Main Program')

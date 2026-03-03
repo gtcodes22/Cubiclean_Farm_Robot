@@ -31,7 +31,7 @@ def main():
 
     # Port 0 means to select an arbitrary unused port
     # set port to 1991 for convience
-    HOST, PORT = "localhost", 1991#0
+    HOST, PORT = "0.0.0.0", 1991#0
    
     # init threaded server
     server = ThreadedTCPServer((HOST, PORT), ThreadedTCPRequestHandler)
@@ -43,6 +43,7 @@ def main():
     # providing qMain and qThread as arguments
     server_thread = threading.Thread(target=server.start,
         args=(qMain,qThread,), kwargs=None)
+    server_thread.name = 'TCP Server Thread'
     
     # A 'daemon' thread terminates when the main thread terminates
     server_thread.daemon = True
