@@ -81,10 +81,10 @@ class _MyHomePageState extends State<MyHomePage> {
       case 2:
         page = MyNetworkPage(title: 'Network Debug Function', socketService: socketService);
       case 3:
-        page = WebViewPage(key: resetPage, title: 'WebView Page', url: widget.url1);
+        page = WebViewPage(key: resetPage, title: 'Bedding Overview: Web', url: widget.url1);
         resetPage.currentState?.reload();
       case 4:
-        page = WebViewPage(key: resetPage, title: 'WebView Page 2', url: widget.url2);
+        page = WebViewPage(key: resetPage, title: 'Robot Visualisation', url: widget.url2);
         resetPage.currentState?.reload();
       case 5:
         page = AboutPage(title: 'About Data Viewer...');
