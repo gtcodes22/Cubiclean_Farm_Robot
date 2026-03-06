@@ -29,8 +29,6 @@ class QueueWatcher(QThread):
                 if queueEvent.type == DEVICE_CONNECTED:
                     self.deviceConnected.emit(device == 'RPI')
                 if queueEvent.type == DEVICE_DISCONNECTED:
-                    if device == 'RPI': self.server.botSocket = None
-                    else:               self.server.appSocket = None
                     self.deviceDisconnected.emit(device == 'RPI')
                     
                 if queueEvent.type == NET_RESPONSE:

@@ -143,7 +143,7 @@ class MainWindow(QMainWindow):
         
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.ping_for_update)
-        #self.update_timer.start(5000)
+        self.update_timer.start(5000)
         
         # connect QueueWatcher signals
         #self.qwThread.newNetMessage.connect()
@@ -205,16 +205,17 @@ class MainWindow(QMainWindow):
 
     @Slot(bool)
     def device_disconnected(self, arg):
-        self.ping_for_update()
         ui = self.ui
         if arg:
             ui.lineEdit_rpi.setEnabled(False)
-            ui.label_BotConnectStatus.setText('❌ Device Disconnected') 
+            ui.label_BotConnectStatus.setText('❌ Device Disconnected')
+            self.server.botSocket = None
         else:
             ui.pushButton_app_sendImg.setEnabled(False)
             ui.pushButton_app_sendDat.setEnabled(False)
             ui.lineEdit_app.setEnabled(False)
             ui.label_AppConnectStatus.setText('❌ Device Disconnected')
+            self.server.appSocket = None
         
     @Slot()
     def close_server(self):

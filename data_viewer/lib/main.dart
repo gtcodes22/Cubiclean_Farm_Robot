@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   StatefulWidget build(BuildContext context) {
     String url1 = 'https://flutter.dev';
     String url2 = 'https://www.youtube.com/watch?v=EgH0pyo5Fbc';
-    
+    String url3 = 'https://https://linktr.ee/techtuesdays_betaden';
     // open config file
     String configFile = './config.txt';
     try {
@@ -30,13 +30,14 @@ class MyApp extends StatelessWidget {
       String contents =  file.readAsStringSync();
       url1 = contents.split('\n')[0].substring(5);
       url2 = contents.split('\n')[1].substring(5);
+      url3 = contents.split('\n')[2].substring(5);
     } catch (e) {
       debugPrint("Error resolving config file path: $e");
-      debugPrint("Creating default config file with urls: $url1, $url2");
+      debugPrint("Creating default config file with urls: $url1, $url2, $url3");
 
       try {
         final file = File(configFile);
-        file.writeAsStringSync('url1:$url1\nurl2:$url2');
+        file.writeAsStringSync('url1:$url1\nurl2:$url2\nurl3:$url3');
       } catch (e) {
         debugPrint("Error creating default config file: $e");
       }
@@ -45,16 +46,18 @@ class MyApp extends StatelessWidget {
     //return networkMessenger(this);
     return MaterialApp(
       //home: const MyNetworkPage(title: 'Network Test Page'),
-      home: MyHomePage(title: 'Home Page', url1: url1, url2: url2),
+      home: MyHomePage(title: 'Home Page', url1: url1, url2: url2, url3: url3),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title, required this.url1, required this.url2});
+  const MyHomePage({super.key, required this.title, required this.url1, required this.url2, required this.url3});
   final String title;
   final String url1;
   final String url2;
+  final String url3;
+
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -75,9 +78,9 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget page;
     switch (pageIndex) {
       case 0:
-        page = TestPage(title: 'System Overview');
+        page = TestPage(title: 'System Status');
       case 1:
-        page = TestPage(title: 'Bed Health Inspector');
+        page = TestPage(title: 'Beds Overview');
       case 2:
         page = MyNetworkPage(title: 'Network Debug Function', socketService: socketService);
       case 3:
@@ -87,6 +90,9 @@ class _MyHomePageState extends State<MyHomePage> {
         page = WebViewPage(key: resetPage, title: 'Robot Visualisation', url: widget.url2);
         resetPage.currentState?.reload();
       case 5:
+        page = WebViewPage(key: resetPage, title: 'Rameez\'s Section', url: widget.url3);
+        resetPage.currentState?.reload();
+      case 6:
         page = AboutPage(title: 'About Data Viewer...');
       default:
         throw UnimplementedError('no widget for $pageIndex');
@@ -118,11 +124,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.handyman),
-                      label: Text('WebView Page'),
+                      label: Text('Bedding Overview: Web'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.handyman),
-                      label: Text('WebView Page 2'),
+                      label: Text('Robot Visualisation'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.handyman),
+                      label: Text('Rameez\'s Section'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.question_mark),

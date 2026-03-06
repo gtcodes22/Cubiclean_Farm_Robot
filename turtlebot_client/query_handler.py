@@ -8,9 +8,9 @@ from packet import *
 from is_socket_closed import *
 from query_handler import *
 
-def run_query_handler(socket, turtlebot):
-    # get server address TODO implement getting address
-    serverAddr = 'UNKNOWN'
+def run_query_handler(ipport, socket, turtlebot):
+    serverAddr = ipport[0]
+    serverPort = ipport[1]
     
     # set timeout
     socket.settimeout(20)
@@ -23,6 +23,7 @@ def run_query_handler(socket, turtlebot):
         try:
             raw = socket.recv(13)
             pdata = str(raw, 'utf-8')
+            print(f'query_handler: got packet [{pdata}][{len(pdata)}]')
                 
         except TimeoutError:
             continue
@@ -30,77 +31,78 @@ def run_query_handler(socket, turtlebot):
             print(f"query handler: connection with {serverAddr} terminated without a proper goodbye :(")
             exit()
                     
-            # check if socket is still connected
-            if pdata == '' and is_socket_closed(socket):
-                print(f"query handler: connection with {serverAddr} terminated without a proper goodbye :(")
-                exit()
-                
-            # allow server to end client here. If a bug in the code below
-            # results in an unhandled exception, this will allow the server
-            # to shut the client down and restart it with changes to code
-            if pdata.upper().startswith("/CLOSE"):
-                print(f'query handler: server {serverAddr} closed client')
-                # build packet and send reponse
-                dataOut = bytes(f'client closed down', 'utf-8')
-                return
+        # check if socket is still connected
+        if pdata == '' and is_socket_closed(socket):
+            print(f"query handler: connection with {serverAddr} terminated without a proper goodbye :(")
+            exit()
             
-            # get length of data from packet
-            length = int.from_bytes(raw[9:13], 'big')
-            
-            if is_valid_properties(pdata):
+        # allow server to end client here. If a bug in the code below
+        # results in an unhandled exception, this will allow the server
+        # to shut the client down and restart it with changes to code
+        if pdata.upper().startswith("/CLOSE"):
+            print(f'query handler: server {serverAddr} closed client')
+            # build packet and send reponse
+            dataOut = bytes(f'client closed down', 'utf-8')
+            return
+        
+        # get length of data from packet
+        length = int.from_bytes(raw[9:13], 'big')
+        print(f'query_handler: length of data: {length}')
+        if is_valid_properties(pdata):
+            print('valid packet')
+            try:
+                # request rest of packet
+                data = ''
                 try:
-                    # request rest of packet
-                    data = ''
-                    try:
-                        data = str(socket.recv(length + 5), 'utf-8')
-                    except TimeoutError:
-                        print(f"query handler: got incomplete packet from {serverAddr}")
-                        continue
-                    except ConnectionResetError:
-                        print(f"query handler: connection with {serverAddr} terminated without a proper goodbye :(")
-                        exit()
-                
-                    # construct Packet object
-                    packet = PacketMessage(serverAddr, pdata + data)
-                    
-                    # print data recieved to terminal
-                    if packet.mtype == 'MSG':
-                        print(f"query handler: Recv MSG:'{packet.data}' from {packet.src}")
-                        
-                        # these messages are commands handled by the server
-                        socket.sendall(message_handler(packet))
-                        
-                    else:
-                        print(f"query handler: Recv {packet.mtype}({packet.length} bytes) from {packet.src}")
-          
-                except TimeoutError as e:
-                    print(f'query handler: connection time out for {serverAddr}')
-                    return
-            else:
-                # set timeout to 0.01 to get rest of data without blocking
-                socket.settimeout(0.01)
-                try:
-                    raw = socket.recv(4096)
-                    pdata += str(raw, 'utf-8')
+                    data = str(socket.recv(length + 5), 'utf-8')
                 except TimeoutError:
-                    pass
-                    
-                # reset timeout
-                socket.settimeout(20)
+                    print(f"query handler: got incomplete packet from {serverAddr}")
+                    continue
+                except ConnectionResetError:
+                    print(f"query handler: connection with {serverAddr} terminated without a proper goodbye :(")
+                    exit()
+            
+                # construct Packet object
+                packet = PacketMessage(serverAddr, pdata + data)
                 
-                # echo whole message back to client
-                print(f"query handler: echo '{pdata.rstrip()}' to {serverAddr}")
-                socket.sendall(bytes(pdata, 'utf-8'))
+                # print data recieved to terminal
+                if packet.mtype == 'MSG':
+                    print(f"query handler: Recv MSG:'{packet.data}' from {packet.src}")
+                    
+                    # these messages are commands handled by the server
+                    socket.sendall(message_handler(packet, turtlebot))
+                    
+                else:
+                    print(f"query handler: Recv {packet.mtype}({packet.length} bytes) from {packet.src}")
+      
+            except TimeoutError as e:
+                print(f'query handler: connection time out for {serverAddr}')
+                return
+        else:
+            # set timeout to 0.01 to get rest of data without blocking
+            socket.settimeout(0.01)
+            try:
+                raw = socket.recv(4096)
+                pdata += str(raw, 'utf-8')
+            except TimeoutError:
+                pass
+                
+            # reset timeout
+            socket.settimeout(20)
+            
+            # echo whole message back to client
+            print(f"query handler: echo '{pdata.rstrip()}' to {serverAddr}")
+            socket.sendall(bytes(pdata, 'utf-8'))
                 
 def message_handler(packet, turtlebot):
     response = ''
     description = ''
     
-    if packet.data == 'EXIT':
+    if packet.data.upper().startswith('/EXIT'):
         print(f"query handler: ending connection with {packet.src}")
         exit()
         
-    elif packet.data[:5] == 'SETUP':
+    elif packet.data.upper().startswith('/SETUP'):
         description = 'device properties'
         
         # get attributes of device
@@ -110,7 +112,6 @@ def message_handler(packet, turtlebot):
         height = int.from_bytes(packet.data[71:73], 'big')
         
         # print device properties to console
-        print(f"i: Device connected @ {self.client_address[0]} is {packet.src}")
         print(f'i: version: {version}')
         print(f'i: OS: {OS}')
         print(f'i: Screen Dimensions: {width}x{height}')
@@ -137,6 +138,6 @@ def message_handler(packet, turtlebot):
         response = f'{turtlebot.get_progress()}%'
         
     dataOut = construct_packet('SPC', packet.src, 'MSG', response)
-    print(f"query handler: sending {description} to {self.client_address[0]}")
+    print(f"query handler: sending {description} to TCP Server")
     return dataOut
     

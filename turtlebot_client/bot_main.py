@@ -8,6 +8,8 @@ from packet import *
 from turtlebot import TurtleBot
 import threading
 from query_handler import *
+import time
+import sys
 
 def main():
     args = parser.parse_args()
@@ -68,21 +70,24 @@ def main():
     
     # create query handler thread
     qh_thread = threading.Thread(
-        target=run_query_handler, args=(serverSocket, turtlebot,),
+        target=run_query_handler, args=((ipAddress,port,),serverSocket, turtlebot,),
         kwargs=None)
     qh_thread.name = 'Query Handler Thread'
+    qh_thread.daemon = True
     qh_thread.start()
     
     # ADD AWESOME CODE HERE!
     # Just test code
     for i in range(5):
         send_msg_to_server(serverSocket, f'iteration {i}')
+        time.sleep(2)
     
-    # to test functionality
+    # wait for qh_thread to end
     qh_thread.join()
     
     # call this when program ends
     serverSocket.close()
+    sys.exit()
 
 def send_msg_to_server(sock, StringData):
     # convert string data to bytes
