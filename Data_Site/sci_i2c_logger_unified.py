@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
-
+# The timestamp in the CSV filename identifies the overall robot session/run 
+# and is shared across all files output for that session. this helps later to group files by run 
+# and also to correlate with the robot's own logs which have a single timestamp for the whole run.
+# It may differ from the timestamps inside the CSV because the robot can move
+# between locations before sensor logging starts at a specific bed/point.
 
 import argparse
 import csv
