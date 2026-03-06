@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-
-
+import sys
+sys.path.insert(0, "..\\chemical_sensor_drivers")
 
 import argparse
 import csv
@@ -9,12 +9,14 @@ import re
 import time
 from datetime import datetime
 
-import DFRobot_RP2040_SCI as sci
-import board
-import busio
-import adafruit_ads1x15.ads1115 as ADS
-
-
+try:
+    import DFRobot_RP2040_SCI as sci
+    import board
+    import busio
+    import adafruit_ads1x15.ads1115 as ADS
+except ImportError as e:
+    print('w: could not import sensor modules related libraries!')
+    
 # I2C ADDRESSES 
 DAQ1_I2C_ADDR = 0x21
 DAQ2_I2C_ADDR = 0x22

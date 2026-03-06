@@ -13,3 +13,4 @@ tcp-server/TCP-Server-GUI/.qtcreator/Python_3_12_64_bit_venv/
 /tcp-server/__pycache__
 *.pyc
 data_viewer/Release Build.lnk
+turtlebot_client/out_test/*
