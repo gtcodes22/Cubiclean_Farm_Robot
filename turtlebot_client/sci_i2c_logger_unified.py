@@ -449,4 +449,8 @@ run_logger(
 
 bed_num, point_num = increment_bed_point(bed_num, point_num)
 
+###########################################################
+Jades send csv also needs to go after this each time
+############################################################
+
     """
