@@ -1,6 +1,42 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
+
+"""
+Cubiclean Bed Viewer
+
+Main program flow
+
+1. Load and process all CSV session data using Build_All_session_visual_data().
+2. Build session/date/run lookup data for the dropdowns and determine the default selections, usually from the most recent available run.
+3. Create the initial app state used to track the current view and selections. This is stored in a dcc.Store and updated via callbacks whenever the user clicks or changes controls. The app state includes:
+    - Current_view: overview, bed, point, single_sensor_full, or day_progression
+    - Selected_session_key: the unique key for the selected session/bed
+    - Selected_point_id: the currently selected point (1-6) when in point or single_sensor_full view
+    - Selected_sensor_name: the currently selected sensor name when in single_sensor_full view
+    - Nav_history: a list of previous app states to support back navigation
+
+4. Build the Dash layout:
+   - top controls for date, session and beds/page selection
+   - navigation buttons for home, back, page navigation, and day progression
+   - main content area that conditionally renders based on the current view in the app state
+   - graph area 
+   - sensor stats area that shows stats for the currently selected sensor when in single_sensor_full view
+   
+5. Periodically refresh the processed data so new/updated runs can appear. 
+
+6. Use one callback to update the stored app state whenever the user clicks or changes controls. 
+
+7. Use one render callback to turn the stored app state into visible page content. 
+    This callback reads the current view and selections from the app state and calls helper functions to build the appropriate content for that view. 
+
+8. Support drill-down navigation:
+   Overview -> Bed -> Point -> Single sensor full view 
+   plus day progression and back/home navigation. 
+   
+"""
+
+
 import os
 import json
 import statistics
@@ -8,14 +44,27 @@ from datetime import datetime
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from dash import Dash, dcc, html, Input, Output, State, callback_context, ALL
+from dash import Dash, dcc, html, Input, Output, State, callback_context, ALL, no_update
 
 from Extract_Files import Build_All_session_visual_data
 
+#Display labels used for sensor plot y-axes and the sensor stats panel.
+SENSOR_LABELS = {
+    "Temp_Air": "Temp (°C)",
+    "Humi_Air": "RH (%)",
+    "CO2_ppm": "CO₂ (ppm)",
+    "NH3_ppm": "NH₃ (ppm)",
+    "H2S_ppm": "H₂S (ppm)",
+    "CH4_Vout": "CH₄ Vout (V)",
+}
 
+# helper functions 
 ###############################################################
 
 def _safe_int(value, default=0):
+   
+    """Safely convert a value to an integer returning a default if conversion fails."""
+
     try:
         return int(value)
     except Exception:
@@ -23,6 +72,9 @@ def _safe_int(value, default=0):
 
 
 def _safe_float(value, default=None):
+   
+    """Safely convert a value to a float returning a default if conversion fails."""
+
     try:
         if value is None:
             return default
@@ -32,10 +84,16 @@ def _safe_float(value, default=None):
 
 
 def _rect_poly_xy(x0, y0, x1, y1):
+   
+    """Return the x and y coordinates for a rectangle polygon defined by the corners (x0, y0) and (x1, y1)."""
+
     return [x0, x1, x1, x0, x0], [y0, y0, y1, y1, y0]
 
 
 def _split_session_key(Session_Key):
+
+    """Split a session key of the format 'BedID__TimeStamp' into its components."""
+
     if not isinstance(Session_Key, str):
         return {"Bed_ID": None, "TimeStamp": None}
     if "__" in Session_Key:
@@ -45,12 +103,18 @@ def _split_session_key(Session_Key):
 
 
 def _extract_session_date(TimeStamp):
+
+    """Extract the date portion from a timestamp string in the form 'YYYY-MM-DD...'."""
+    
     if not isinstance(TimeStamp, str):
         return None
     return TimeStamp[:10] if len(TimeStamp) >= 10 else None
 
 
 def _extract_run_label(TimeStamp):
+
+    """Extract a run label from the timestamp which is the part after the first underscore."""
+
     if not isinstance(TimeStamp, str):
         return ""
     parts = TimeStamp.split("_")
@@ -60,6 +124,9 @@ def _extract_run_label(TimeStamp):
 
 
 def _bed_sort_key_from_session_key(Session_Key):
+
+    """Extract a sort key from the session key that sorts by bed number if possible, otherwise puts it at the end."""
+
     parts = _split_session_key(Session_Key)
     bed_id = str(parts.get("Bed_ID") or "")
     digits = "".join([c for c in bed_id if c.isdigit()])
@@ -69,6 +136,7 @@ def _bed_sort_key_from_session_key(Session_Key):
 
 
 def _status_class_from_colour(colour_name: str):
+    """Convert a colour name to a CSS class for status indication."""
     c = str(colour_name or "grey").lower()
     if c == "green":
         return "status-good"
@@ -80,6 +148,11 @@ def _status_class_from_colour(colour_name: str):
 
 
 def _get_triggered_id():
+    """
+    Return the ID of the input that triggered the current callback. 
+
+    This supports both normal Dash component IDs and pattern-matching IDs.
+    """
     try:
         trig = callback_context.triggered_id
         if trig is not None:
@@ -103,6 +176,14 @@ def _get_triggered_id():
 ###############################################################
 
 def Build_session_run_map(All_sessions_map):
+    """
+    Group all session keys by run timestamp and by date.
+
+    Output is used to:
+    - populate the session dropdown
+    - filter runs by selected date
+    - find which bed session keys belong to a selected run
+    """
     Session_run_map = {}
     Runs_by_date = {}
 
@@ -138,6 +219,9 @@ def Build_session_run_map(All_sessions_map):
 
 
 def Filter_runs_by_date(Session_selector_data, Selected_session_date):
+
+    """Given the session selector data and a selected date return the list of run keys that correspond to that date."""
+
     Runs_by_date = Session_selector_data.get("Runs_by_date", {})
     if not Selected_session_date:
         return []
@@ -145,14 +229,29 @@ def Filter_runs_by_date(Session_selector_data, Selected_session_date):
 
 
 def Pull_run_bed_keys(Session_selector_data, Selected_session_run_key):
+    """Given the session selector data and a selected run key return the list of bed session keys that correspond to that run."""
+
     Session_run_map = Session_selector_data.get("Session_run_map", {})
     run_row = Session_run_map.get(Selected_session_run_key, {})
     return list(run_row.get("Bed_keys", []))
 
 
 def Build_run_options(Run_keys_on_date, Session_selector_data, All_sessions_map):
+
+    """
+    Build the visible dropdown labels for the selected day's runs. 
+
+    Each option includes:
+    - run label
+    - number of beds
+    - count of beds by status colour
+
+    """
+
+
     Session_run_map = Session_selector_data.get("Session_run_map", {})
     opts = []
+    #  Build a dropdown option for each run available on the selected date.
     for Run_Key in Run_keys_on_date:
         run_row = Session_run_map.get(Run_Key, {})
         bed_keys = list(run_row.get("Bed_keys", []))
@@ -177,7 +276,11 @@ def Build_run_options(Run_keys_on_date, Session_selector_data, All_sessions_map)
 
 
 def Default_run_set(Session_selector_data, Run_keys_on_date):
+
+    """Determine the default run key to select based on the session selector data and the available runs for the selected date."""
+
     Most_recent_run_key = Session_selector_data.get("Most_recent_run_key")
+    # Prefer the overall most recent run if it exists on the selected date otherwise use the latest run for that date.
     if Run_keys_on_date:
         if Most_recent_run_key in Run_keys_on_date:
             return Most_recent_run_key
@@ -186,6 +289,19 @@ def Default_run_set(Session_selector_data, Run_keys_on_date):
 
 
 def Build_set_session_select_data(All_sessions_map, Session_overview=None, Session_sort_order="desc"):
+
+    """
+    Build all data needed by the date/session selectors and their defaults.
+
+    This is the main setup step that turns raw session data into:
+    - date dropdown options
+    - session dropdown options
+    - default selected date
+    - default selected run
+    - default selected bed session key
+
+    """
+    
     if Session_overview is None:
         Session_overview = []
 
@@ -195,12 +311,15 @@ def Build_set_session_select_data(All_sessions_map, Session_overview=None, Sessi
     All_run_keys = run_group["All_run_keys"]
 
     session_date_list = sorted(Runs_by_date.keys())
+    # if the sort order is descending then reverse the session date list so the most recent dates are at the top of the dropdown
     if str(Session_sort_order).lower() == "desc":
         session_date_list = list(reversed(session_date_list))
     session_date_options = [{"label": d, "value": d} for d in session_date_list]
 
     Most_recent_run_key = All_run_keys[-1] if All_run_keys else None
-    Selected_session_date = _extract_session_date(Most_recent_run_key) if Most_recent_run_key else (session_date_list[0] if session_date_list else None)
+    Selected_session_date = _extract_session_date(Most_recent_run_key) if Most_recent_run_key else (
+        session_date_list[0] if session_date_list else None
+    )
 
     Run_keys_on_date = Filter_runs_by_date({"Runs_by_date": Runs_by_date}, Selected_session_date)
     session_Run_Options = Build_run_options(Run_keys_on_date, {"Session_run_map": Session_run_map}, All_sessions_map)
@@ -213,16 +332,13 @@ def Build_set_session_select_data(All_sessions_map, Session_overview=None, Sessi
         "Session_sort_order": Session_sort_order,
         "session_date_options": session_date_options,
         "Selected_session_date": Selected_session_date,
-
         "Session_run_map": Session_run_map,
         "Runs_by_date": Runs_by_date,
         "All_run_keys": All_run_keys,
         "Most_recent_run_key": Most_recent_run_key,
-
         "Run_keys_on_date": Run_keys_on_date,
         "session_Run_Options": session_Run_Options,
         "Default_session_run_key": Default_session_run_key,
-
         "Default_run_bed_keys": Default_run_bed_keys,
         "Default_session_key": Default_session_key,
     }
@@ -231,6 +347,14 @@ def Build_set_session_select_data(All_sessions_map, Session_overview=None, Sessi
 ###############################################################
 
 def click_nav_history(App_state):
+
+    """
+    Save the current navigation state before drilling down to a deeper view.
+
+    This allows the Back button to restore the previous view and selection.
+
+    """
+
     hist = list(App_state.get("Nav_history", []))
     hist.append({
         "Current_view": App_state.get("Current_view", "overview"),
@@ -246,6 +370,7 @@ def click_nav_history(App_state):
 
 
 def pop_nav_history(App_state):
+    # Pop the most recent saved navigation state. If no history exists, return None as the previous state.
     hist = list(App_state.get("Nav_history", []))
     if not hist:
         return App_state, None
@@ -255,9 +380,23 @@ def pop_nav_history(App_state):
 
 
 def Build_startup_app_state(Session_selector_data=None):
+
+    """
+    Create the initial app state used by the whole interface.
+
+    The store keeps track of:
+    - which view is open
+    - which bed/point/sensor is selected
+    - page number
+    - navigation history
+    - dropdown selections
+    """
+
     Default_session_key = None
     Default_session_run_key = None
     Selected_session_date = None
+
+    # If session selector data is available, initialise the default date, run, and session selections from it.
     if Session_selector_data:
         Default_session_key = Session_selector_data.get("Default_session_key")
         Default_session_run_key = Session_selector_data.get("Default_session_run_key")
@@ -278,6 +417,9 @@ def Build_startup_app_state(Session_selector_data=None):
 
 
 def Set_app_state_home(App_state):
+    """
+    Reset the app to the home overview view.
+    """
     App_state["Current_view"] = "overview"
     App_state["Selected_point_id"] = None
     App_state["Selected_sensor_name"] = None
@@ -288,6 +430,9 @@ def Set_app_state_home(App_state):
 
 
 def Set_app_state_overview(App_state):
+    """
+    Return to overview without changing the selected bed/run/date.
+    """
     App_state["Current_view"] = "overview"
     App_state["Selected_point_id"] = None
     App_state["Selected_sensor_name"] = None
@@ -296,6 +441,9 @@ def Set_app_state_overview(App_state):
 
 
 def Set_app_state_bed(App_state, Selected_session_key):
+    """
+    Open the selected bed view and update related date/run selections.
+    """
     App_state["Current_view"] = "bed"
     App_state["Selected_session_key"] = Selected_session_key
     App_state["Selected_point_id"] = None
@@ -303,6 +451,8 @@ def Set_app_state_bed(App_state, Selected_session_key):
 
     parts = _split_session_key(Selected_session_key)
     dt = _extract_session_date(parts.get("TimeStamp"))
+    # Update the selected date and run to match the chosen session key so the dropdowns stay in sync with the current bed.
+    
     if dt is not None:
         App_state["Selected_session_date"] = dt
     if parts.get("TimeStamp") is not None:
@@ -313,6 +463,9 @@ def Set_app_state_bed(App_state, Selected_session_key):
 
 
 def Set_app_state_point(App_state, Selected_point_id):
+    """
+    Open the selected point view for the current bed.
+    """
     App_state["Current_view"] = "point"
     App_state["Selected_point_id"] = Selected_point_id
     App_state["Selected_sensor_name"] = None
@@ -321,6 +474,9 @@ def Set_app_state_point(App_state, Selected_point_id):
 
 
 def Set_app_state_sensor(App_state, Selected_sensor_name):
+    """
+    Open the full single-sensor view after clicking a subplot title.
+    """
     App_state["Current_view"] = "single_sensor_full"
     App_state["Selected_sensor_name"] = Selected_sensor_name
     App_state["Click_nonce"] = _safe_int(App_state.get("Click_nonce", 0), 0) + 1
@@ -328,6 +484,11 @@ def Set_app_state_sensor(App_state, Selected_sensor_name):
 
 
 def Set_app_state_back(App_state):
+    """
+    Restore the previous state from navigation history.
+
+    If no history exists, return to overview.
+    """
     App_state, Prev_state = pop_nav_history(App_state)
     if Prev_state is None:
         return Set_app_state_overview(App_state)
@@ -350,12 +511,18 @@ def Set_app_state_back(App_state):
 ###############################################################
 
 def Get_Page_Count(page_keys, Beds_per_page):
+    """Calculate the total number of pages needed for the given bed keys and beds-per-page setting."""
     Beds_per_page = max(1, _safe_int(Beds_per_page, 8))
     n_keys = len(page_keys) if isinstance(page_keys, list) else 0
     return max(1, (n_keys + Beds_per_page - 1) // Beds_per_page)
 
 
 def Build_Overview_pages(page_keys, Beds_per_page, page_index):
+    """
+    Convert the full list of bed keys into a single page of keys to display.
+
+    This is used for the overview bed card grid.
+    """
     Beds_per_page = max(1, _safe_int(Beds_per_page, 8))
     page_count = Get_Page_Count(page_keys, Beds_per_page)
 
@@ -374,6 +541,11 @@ def Build_Page_Button(page_index, page_count):
 ###############################################################
 
 def Build_overview_cards(All_sessions_map, App_state, Session_selector_data):
+    """
+    Build the overview grid of bed cards for the currently selected run.
+
+    Each card summarises one bed and allows the user to drill into that bed.
+    """
     Selected_session_run_key = App_state.get("Selected_session_run_key")
     Selected_session_key = App_state.get("Selected_session_key")
     Beds_per_page = _safe_int(App_state.get("Beds_per_page", 8), 8)
@@ -381,7 +553,8 @@ def Build_overview_cards(All_sessions_map, App_state, Session_selector_data):
 
     run_bed_keys = Pull_run_bed_keys(Session_selector_data, Selected_session_run_key)
     run_bed_keys = sorted(list(run_bed_keys or []), key=_bed_sort_key_from_session_key)
-
+    # If no bed sessions exist for the selected run, show a message instead of the overview grid.
+    
     if not run_bed_keys:
         return html.Div("No beds exist for this run/date selection.", className="empty")
 
@@ -389,6 +562,7 @@ def Build_overview_cards(All_sessions_map, App_state, Session_selector_data):
     page_keys = page_info["page_keys"]
 
     cards = []
+    # Build one clickable card per bed on the current page.
     for Session_Key in page_keys:
         bed_vis = All_sessions_map.get(Session_Key, {}) or {}
         Bed_ID = str(bed_vis.get("Bed_ID", "UNKNOWN"))
@@ -401,6 +575,7 @@ def Build_overview_cards(All_sessions_map, App_state, Session_selector_data):
         n_expected = overview.get("n_points_expected", None)
 
         subtitle_bits = [f"Run: {TimeStamp}", ("Complete" if Complete == 1 else "In Progress")]
+        # Only show the points count when both present and expected values are available.
         if n_present is not None and n_expected is not None:
             subtitle_bits.append(f"Points: {n_present}/{n_expected}")
 
@@ -423,7 +598,15 @@ def Build_overview_cards(All_sessions_map, App_state, Session_selector_data):
 
 
 def Build_bed_point_tiles(All_sessions_map, App_state):
+    """
+    Build the bed view showing clickable point tiles for the selected bed.
+
+    This is the next drill-down level after the overview cards.
+    """
     Selected_session_key = App_state.get("Selected_session_key")
+    # If the selected session key is missing or invalid, show a fallback message.
+   
+
     if not Selected_session_key or Selected_session_key not in All_sessions_map:
         return html.Div("No bed selected.", className="empty")
 
@@ -434,7 +617,7 @@ def Build_bed_point_tiles(All_sessions_map, App_state):
     Complete = _safe_int(Bed_visual.get("Complete", 0), 0)
 
     Point_colour_map = Bed_visual.get("Point_colour_map", {}) if isinstance(Bed_visual.get("Point_colour_map", {}), dict) else {}
-
+    
     header = html.Div(
         [
             html.Div(f"{Bed_ID}", style={"fontWeight": "800", "fontSize": "16px"}),
@@ -442,7 +625,8 @@ def Build_bed_point_tiles(All_sessions_map, App_state):
                 f"Run: {TimeStamp} | Bed: {bed_colour.upper()} | {'Complete' if Complete == 1 else 'In Progress'}",
                 style={"color": "rgba(255,255,255,0.72)", "fontSize": "12px", "marginTop": "4px"}
             ),
-            html.Div("Click a point to open sensor plots.", style={"color": "rgba(255,255,255,0.72)", "fontSize": "12px", "marginTop": "4px"})
+            html.Div("Click a point to open sensor plots.",
+                     style={"color": "rgba(255,255,255,0.72)", "fontSize": "12px", "marginTop": "4px"})
         ],
         style={"marginBottom": "10px"}
     )
@@ -457,23 +641,30 @@ def Build_bed_point_tiles(All_sessions_map, App_state):
                     html.Div(point_colour.upper(), className="tile-badge"),
                     html.Div("Click to open plots", className="tile-subtitle"),
                 ],
-                id={"type": "point-tile", "pid": pid},
+                id={"type": "point-tile", "pid": pid, "session_key": Selected_session_key},
                 n_clicks=0,
                 className="tile-card tile-compact " + _status_class_from_colour(point_colour) + f" p{pid}",
             )
         )
 
-    # U-turn layout 
     return html.Div([header, html.Div(tiles, className="point-grid-uturn")])
 
 
 ###############################################################
 
 def Build_subplot_customdata(Sensor_channel, Point_ID=None, Click_nonce=0):
+    """
+    Pack metadata into a subplot click target so the graph click callback
+    can tell which sensor full-view button was clicked.
+    """
     return {"Target": "sensor_fullview_button", "Sensor_channel": Sensor_channel, "Point_ID": Point_ID, "Click_nonce": Click_nonce}
 
 
 def Set_selected_sensor_name_from_click(clickData):
+    """
+    Extract the selected sensor name from the graph clickData payload.
+    """
+
     try:
         point = clickData["points"][0]
     except Exception:
@@ -489,10 +680,14 @@ def Set_selected_sensor_name_from_click(clickData):
 
 
 def _count_threshold_excursions(above_baseline, interp_valid):
+
+    """Count the number of times the signal goes above the baseline threshold while being valid."""
+    
     if not isinstance(above_baseline, list) or not isinstance(interp_valid, list):
         return 0
     n = min(len(above_baseline), len(interp_valid))
     count, in_exc = 0, False
+    # Count a new excursion only when the signal transitions into an above-threshold valid state.
     for i in range(n):
         a = int(above_baseline[i]) == 1 if above_baseline[i] is not None else False
         v = int(interp_valid[i]) == 1 if interp_valid[i] is not None else False
@@ -506,6 +701,9 @@ def _count_threshold_excursions(above_baseline, interp_valid):
 
 
 def _time_above_threshold_s(time_s, above_baseline, interp_valid):
+
+    """Calculate the total time in seconds that the signal is above the baseline threshold while being valid."""
+    # Estimate total time above threshold using the sample spacing from time_s.
     if not isinstance(time_s, list) or not time_s:
         return 0.0
     n = min(len(time_s), len(above_baseline or []), len(interp_valid or []))
@@ -526,6 +724,7 @@ def _time_above_threshold_s(time_s, above_baseline, interp_valid):
 
 
 def _combined_min_max(*series_lists):
+    # Combine multiple lists of values and calculate the overall minimum and maximum ignoring non-numeric values.
     all_vals = []
     for series in series_lists:
         if isinstance(series, list):
@@ -539,9 +738,24 @@ def _combined_min_max(*series_lists):
 
 
 def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=None, Click_nonce=0):
+
+    """
+    Build the 2x3 subplot point view showing all sensors for one selected point.
+
+    Each subplot shows:
+    - raw values
+    - interpolated values
+    - points above threshold
+    - threshold lines
+    - a clickable [Full] title area to open a single sensor view
+    """
+
     pid = _safe_int(Selected_point_id, 0)
 
     point_sumup = {}
+    # check that the data we expect is actually in the structure
+    # and of the right type before we try to access it
+    
     if isinstance(Bed_visual.get("Bed_point_sumup", {}), dict):
         point_sumup = Bed_visual.get("Bed_point_sumup", {}).get(pid, {}) or {}
 
@@ -552,16 +766,21 @@ def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=N
     sensor_order = ["Temp_Air", "Humi_Air", "CO2_ppm", "NH3_ppm", "H2S_ppm", "CH4_Vout"]
     Baseline_thresholds = Baseline_thresholds or {}
 
+    # If time or channel data is missing, return an empty figure with a message.
+    
     if not channels or not time_s:
         fig = go.Figure()
-        fig.add_annotation(x=0.5, y=0.5, xref="paper", yref="paper", text=f"No sensor plot data available for P{pid}", showarrow=False)
-        fig.update_layout(title=f"Point Detail | {Bed_visual.get('Bed_ID', 'UNKNOWN')} | P{pid}", width=1000, height=650)
+        fig.add_annotation(x=0.5, y=0.5, xref="paper", yref="paper",
+                           text=f"No sensor plot data available for P{pid}", showarrow=False)
+        fig.update_layout(title=f"Point Detail | {Bed_visual.get('Bed_ID', 'UNKNOWN')} | P{pid}",
+                          width=1000, height=650)
         fig.update_xaxes(visible=False)
         fig.update_yaxes(visible=False)
         return fig
 
     fig = make_subplots(rows=2, cols=3, horizontal_spacing=0.08, vertical_spacing=0.16)
-
+    # we iterate through the sensors in the defined order and add traces to the corresponding subplot 
+    # for each sensor that has data.
     for idx, sensor_name in enumerate(sensor_order):
         r = (idx // 3) + 1
         c = (idx % 3) + 1
@@ -580,12 +799,16 @@ def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=N
         ), row=r, col=c)
 
         fig.add_trace(go.Scatter(
-            x=time_s, y=interp_values, mode="lines", showlegend=False, line=dict(dash="dot"),
+            x=time_s, y=interp_values, mode="lines", showlegend=False,
+            line=dict(dash="dot"),
             hovertemplate="t=%{x}s<br>interp=%{y}<extra></extra>"
         ), row=r, col=c)
 
         spike_x, spike_y = [], []
         n = min(len(time_s), len(interp_values), len(above_baseline), len(interp_valid))
+
+        # to show the points above threshold we iterate through the above_baseline and interp_valid
+        #  lists and collect the time and value for each point where the signal is above threshold and valid.
         for i in range(n):
             is_above = int(above_baseline[i]) == 1 if above_baseline[i] is not None else False
             is_valid = int(interp_valid[i]) == 1 if interp_valid[i] is not None else False
@@ -606,7 +829,9 @@ def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=N
         if tmin is not None:
             fig.add_hline(y=float(tmin), line_width=1.0, line_dash="dot", line_color="red", row=r, col=c)
 
+        label = SENSOR_LABELS.get(sensor_name, sensor_name)
         fig.update_xaxes(title_text="t (s)", row=r, col=c)
+        fig.update_yaxes(title_text=label, row=r, col=c)
 
         x_min = _safe_float(min(time_s), 0.0)
         x_max = _safe_float(max(time_s), 1.0)
@@ -636,7 +861,7 @@ def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=N
             x=[title_text_x],
             y=[title_text_y],
             mode="text",
-            text=[f"{sensor_name} [Full]"],
+            text=[f"{label} [Full]"],
             hoverinfo="skip",
             showlegend=False
         ), row=r, col=c)
@@ -648,7 +873,7 @@ def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=N
             fillcolor="rgba(0,0,0,0)",
             hoveron="fills",
             hoverinfo="text",
-            hovertext=f"Open full view for {sensor_name}",
+            hovertext=f"Open full view for {label}",
             customdata=[Build_subplot_customdata(sensor_name, pid, Click_nonce)] * len(xs),
             showlegend=False
         ), row=r, col=c)
@@ -657,9 +882,8 @@ def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=N
     TimeStamp = str(Bed_visual.get("TimeStamp", "UNKNOWN"))
     fig.update_layout(
         title=f"Point Detail | {Bed_ID} | Run: {TimeStamp} | P{pid}",
-        height=800,                 
-        autosize=True,              
-        margin=dict(l=30, r=30, t=85, b=40),
+        autosize=True,
+        margin=dict(l=80, r=30, t=85, b=60),
         showlegend=False,
         plot_bgcolor="white",
         paper_bgcolor="white",
@@ -669,6 +893,11 @@ def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=N
 
 
 def Build_selected_sensor_stats(Bed_visual, Selected_point_id, Selected_sensor_name, Baseline_thresholds=None):
+    """
+    Build a summary of the selected sensor for the current point.
+
+    This is used to populate the right-hand stats panel in full sensor view.
+    """
     stats_out = {
         "Sensor_channel": Selected_sensor_name,
         "Max_value": None, "Peak_time_s": None,
@@ -685,6 +914,8 @@ def Build_selected_sensor_stats(Bed_visual, Selected_point_id, Selected_sensor_n
 
     pid = _safe_int(Selected_point_id, 0)
     point_sumup = {}
+
+    # we need to be careful to check that the data we expect is actually in the structure
     if isinstance(Bed_visual.get("Bed_point_sumup", {}), dict):
         point_sumup = Bed_visual.get("Bed_point_sumup", {}).get(pid, {}) or {}
 
@@ -737,6 +968,10 @@ def Build_selected_sensor_stats(Bed_visual, Selected_point_id, Selected_sensor_n
 
 
 def Build_selected_sensor_stats_display(Bed_visual, Selected_point_id, Selected_sensor_name, Baseline_thresholds=None):
+    """
+    Convert the selected sensor stats into a title/body text pair for display.
+    """
+
     if Selected_sensor_name is None:
         return "Sensor Stats", "No sensor selected."
 
@@ -752,7 +987,8 @@ def Build_selected_sensor_stats_display(Bed_visual, Selected_point_id, Selected_
         except Exception:
             return str(v)
 
-    title = f"{Selected_sensor_name} | {Bed_ID} | P{pid}"
+
+    title = f"{SENSOR_LABELS.get(Selected_sensor_name, Selected_sensor_name)} | {Bed_ID} | P{pid}"
     body = "\n".join([
         f"Run ID: {Bed_visual.get('TimeStamp', 'UNKNOWN')}",
         f"Sensor: {Selected_sensor_name}",
@@ -776,6 +1012,12 @@ def Build_selected_sensor_stats_display(Bed_visual, Selected_point_id, Selected_
 
 
 def Build_single_sensor_view(Bed_visual, Selected_point_id, Selected_sensor_name, Baseline_thresholds=None):
+    """
+    Build the full single-sensor graph for one point.
+
+    This is the final drill-down view and is shown together with sensor stats.
+    """
+
     Baseline_thresholds = Baseline_thresholds or {}
     pid = _safe_int(Selected_point_id, 0)
     fig = go.Figure()
@@ -787,7 +1029,7 @@ def Build_single_sensor_view(Bed_visual, Selected_point_id, Selected_sensor_name
     Reading_spikes_out = point_sumup.get("Reading_spikes_out", {})
     time_s = list(Reading_spikes_out.get("time_s", []))
     channels = Reading_spikes_out.get("channels", {})
-
+    
     if not isinstance(channels, dict) or Selected_sensor_name not in channels or not time_s:
         fig.add_annotation(
             x=0.5, y=0.5, xref="paper", yref="paper",
@@ -820,7 +1062,8 @@ def Build_single_sensor_view(Bed_visual, Selected_point_id, Selected_sensor_name
             spike_y.append(interp_values[i])
 
     if spike_x:
-        fig.add_trace(go.Scatter(x=spike_x, y=spike_y, mode="markers", name="above-threshold", marker=dict(size=7)))
+        fig.add_trace(go.Scatter(x=spike_x, y=spike_y, mode="markers",
+                                 name="above-threshold", marker=dict(size=7)))
 
     th = Baseline_thresholds.get(Selected_sensor_name, {})
     tmin, tmax = th.get("Min"), th.get("Max")
@@ -833,16 +1076,27 @@ def Build_single_sensor_view(Bed_visual, Selected_point_id, Selected_sensor_name
     TimeStamp = str(Bed_visual.get("TimeStamp", "UNKNOWN"))
     fig.update_layout(
         title=f"Single Sensor View | {Bed_ID} | Run: {TimeStamp} | P{pid} | {Selected_sensor_name}",
-        width=1200, height=780, plot_bgcolor="white", paper_bgcolor="white"
+        width=1200,
+        height=780,
+        margin=dict(l=80, r=30, t=80, b=60),
+        plot_bgcolor="white",
+        paper_bgcolor="white"
     )
     fig.update_xaxes(title_text="t (s)")
-    fig.update_yaxes(title_text=Selected_sensor_name)
+    fig.update_yaxes(title_text=SENSOR_LABELS.get(Selected_sensor_name, Selected_sensor_name))
     return fig
 
 
 ###############################################################
 
-def Ge_Bed_Runs_For_Day(All_sessions_map, App_state, Session_selector_data):
+def Get_Bed_Runs_For_Day(All_sessions_map, App_state, Session_selector_data):
+
+    """
+    Find all runs on the selected date for the currently selected bed.
+
+    This is used for the day progression view so the same bed can be shown
+    across multiple runs from that day.
+    """
     runs = []
     if not isinstance(All_sessions_map, dict) or not isinstance(App_state, dict):
         return runs
@@ -858,7 +1112,8 @@ def Ge_Bed_Runs_For_Day(All_sessions_map, App_state, Session_selector_data):
         return runs
 
     run_keys_on_date = Filter_runs_by_date(Session_selector_data, Selected_session_date)
-
+    # we iterate through the run keys for the selected date and check if we have a session for the selected bed in that run.
+    # If we do then we extract the timestamp and other info to build the list of runs to display.
     for Run_Key in run_keys_on_date:
         candidate_key = f"{selected_bed_id}__{Run_Key}"
         if candidate_key not in All_sessions_map:
@@ -888,7 +1143,11 @@ def Ge_Bed_Runs_For_Day(All_sessions_map, App_state, Session_selector_data):
 
 
 def build_day_progression_display(All_sessions_map, App_state, Session_selector_data):
-    runs = Ge_Bed_Runs_For_Day(All_sessions_map, App_state, Session_selector_data)
+    """
+    Build the horizontal list of bed views showing the same bed across the day.
+    """
+
+    runs = Get_Bed_Runs_For_Day(All_sessions_map, App_state, Session_selector_data)
     if not runs:
         return html.Div("No runs available for this bed on the selected date.", className="empty")
 
@@ -900,7 +1159,8 @@ def build_day_progression_display(All_sessions_map, App_state, Session_selector_
         cards.append(
             html.Div(
                 [
-                    html.Div(f"{i+1}. {run_row.get('run_label','')} ({run_row.get('timestamp_text','')})", className="day-title"),
+                    html.Div(f"{i+1}. {run_row.get('run_label','')} ({run_row.get('timestamp_text','')})",
+                             className="day-title"),
                     content,
                 ],
                 className="day-card"
@@ -912,46 +1172,74 @@ def build_day_progression_display(All_sessions_map, App_state, Session_selector_
 
 ###############################################################
 
-if __name__ == "__main__":
-    print("RUNNING FILE:", os.path.abspath(__file__))
 
-    CSV_Output_dir = r".\out_mock"
-    Sampling_Period = 5.0
 
-    Baseline_thresholds = {
-        "Temp_Air": {"Min": -10.0, "Max": 45.0},
-        "Humi_Air": {"Min": 0.0, "Max": 100.0},
-        "CO2_ppm": {"Min": 300.0, "Max": 1500.0},
-        "NH3_ppm": {"Min": 0.0, "Max": 15.0},
-        "H2S_ppm": {"Min": 0.0, "Max": 5.0},
-        "CH4_Vout": {"Min": 0.0, "Max": 1.8},
-    }
+def create_dash_app(
+    csv_dir: str,
+    host: str = "127.0.0.1",
+    port: int = 8050,
+    debug: bool = False,
+    refresh_ms: int = 10000,
+    sampling_period_s: float = 5.0,
+    baseline_thresholds: dict | None = None,
+    point_classify_params: dict | None = None,
+):
 
-    Point_classify_params = {
-        "Tails_window_len": 3,
-        "Min_valid_count": 3,
-        "Min_valid_check": 0.5,
-        "Num_above_min": 1,
-        "Baseline_buffer": 0.0,
-        "Gradient_Thresh": 0.01,
-        "Plateau_thresh": 0.005,
-        "Settled_tail_check": 0.02,
-        "Consecutive_Above_thresh": 2,
-    }
+    """
+    Create and configure the Dash application.
+
+    Responsibilities:
+    - define default thresholds and classification settings
+    - load processed visual session data
+    - prepare shared lookup data
+    - build layout
+    - register callbacks
+    - return the finished app
+    """
+
+    CSV_Output_dir = str(csv_dir)
+    Sampling_Period = float(sampling_period_s)
+
+    if baseline_thresholds is None:
+        baseline_thresholds = {
+            "Temp_Air": {"Min": -10.0, "Max": 45.0},
+            "Humi_Air": {"Min": 0.0, "Max": 100.0},
+            "CO2_ppm": {"Min": 300.0, "Max": 1500.0},
+            "NH3_ppm": {"Min": 0.0, "Max": 15.0},
+            "H2S_ppm": {"Min": 0.0, "Max": 5.0},
+            "CH4_Vout": {"Min": 0.0, "Max": 1.8},
+        }
+
+    if point_classify_params is None:
+        point_classify_params = {
+            "Tails_window_len": 3,
+            "Min_valid_count": 3,
+            "Min_valid_check": 0.5,
+            "Num_above_min": 1,
+            "Baseline_buffer": 0.0,
+            "Gradient_Thresh": 0.01,
+            "Plateau_thresh": 0.005,
+            "Settled_tail_check": 0.02,
+            "Consecutive_Above_thresh": 2,
+        }
 
     all_vis = Build_All_session_visual_data(
         CSV_Output_dir=CSV_Output_dir,
         Sampling_Period=Sampling_Period,
-        Baseline_thresholds=Baseline_thresholds,
-        Point_classify_params=Point_classify_params,
+        Baseline_thresholds=baseline_thresholds,
+        Point_classify_params=point_classify_params,
         Interp_Max_Gap=1
     )
 
-    All_sessions_map = all_vis.get("All_sessions_map", {})
-    Session_overview = all_vis.get("Session_overview", [])
+    shared = {
+        "All_sessions_map": all_vis.get("All_sessions_map", {}),
+        "Session_overview": all_vis.get("Session_overview", []),
+    }
+    shared["Session_selector_data"] = Build_set_session_select_data(
+        shared["All_sessions_map"], shared["Session_overview"], Session_sort_order="desc"
+    )
 
-    Session_selector_data = Build_set_session_select_data(All_sessions_map, Session_overview, Session_sort_order="desc")
-    initial_state = Build_startup_app_state(Session_selector_data)
+    initial_state = Build_startup_app_state(shared["Session_selector_data"])
 
     app = Dash(__name__, suppress_callback_exceptions=True)
     app.title = "Cubiclean Bed Viewer"
@@ -968,11 +1256,9 @@ if __name__ == "__main__":
     }
     panel_hidden_style = {"display": "none"}
 
-   
     app.layout = html.Div(
         className="container",
         children=[
-            # Header 
             html.Div(
                 className="header-title",
                 children=[
@@ -993,8 +1279,8 @@ if __name__ == "__main__":
                                     dcc.Dropdown(
                                         id="dropdown-session-date",
                                         className="cc-dropdown",
-                                        options=Session_selector_data.get("session_date_options", []),
-                                        value=Session_selector_data.get("Selected_session_date"),
+                                        options=shared["Session_selector_data"].get("session_date_options", []),
+                                        value=shared["Session_selector_data"].get("Selected_session_date"),
                                         clearable=False,
                                         style={"minWidth": "180px"},
                                     ),
@@ -1006,9 +1292,9 @@ if __name__ == "__main__":
                                     html.Label("Session"),
                                     dcc.Dropdown(
                                         id="dropdown-session-run",
-                                        className="cc-dropdown cc-dropdown-session", 
-                                        options=Session_selector_data.get("session_Run_Options", []),
-                                        value=Session_selector_data.get("Default_session_run_key"),
+                                        className="cc-dropdown cc-dropdown-session",
+                                        options=shared["Session_selector_data"].get("session_Run_Options", []),
+                                        value=shared["Session_selector_data"].get("Default_session_run_key"),
                                         clearable=False,
                                         style={"minWidth": "80%"},
                                     ),
@@ -1034,8 +1320,9 @@ if __name__ == "__main__":
             ),
 
             dcc.Store(id="store-app-state", data=initial_state),
+            dcc.Store(id="store-refresh", data=0),
+            dcc.Interval(id="interval-refresh", interval=int(refresh_ms), n_intervals=0),
 
-            # Main panel (C)
             html.Div(
                 className="panel",
                 children=[
@@ -1045,7 +1332,8 @@ if __name__ == "__main__":
                             html.Div(
                                 children=[
                                     html.Div("Status", style={"fontSize": "16px", "fontWeight": "650"}),
-                                    html.Div(id="view-status-text", style={"fontSize": "12px", "color": "rgba(255,255,255,0.72)"}),
+                                    html.Div(id="view-status-text",
+                                             style={"fontSize": "12px", "color": "rgba(255,255,255,0.72)"}),
                                 ],
                             ),
                             html.Div(
@@ -1055,18 +1343,20 @@ if __name__ == "__main__":
                                     html.Button("Back", id="btn-back", n_clicks=0, className="btn"),
                                     html.Button("Prev", id="btn-page-prev", n_clicks=0, className="btn"),
                                     html.Button("Next", id="btn-page-next", n_clicks=0, className="btn"),
-                                    html.Span(id="txt-page-status", style={"marginLeft": "8px", "color": "rgba(255,255,255,0.72)"}),
-                                    html.Button("View Day Progression", id="viewDayProgressionButton", n_clicks=0, className="btn"),
+                                    html.Span(id="txt-page-status",
+                                              style={"marginLeft": "8px", "color": "rgba(255,255,255,0.72)"}),
+                                    html.Button("View Day Progression", id="viewDayProgressionButton",
+                                                n_clicks=0, className="btn"),
                                 ],
                             ),
                         ],
                     ),
 
                     html.Div(
-                        style={"display": "flex", "gap": "12px", "alignItems": "stretch"},
+                        style={"display": "flex", "gap": "12px", "alignItems": "stretch", "minHeight": "0"},
                         children=[
                             html.Div(
-                                style={"flex": "3", "minWidth": "0"},
+                                style={"flex": "3", "minWidth": "0", "minHeight": "0", "overflowY": "auto"},
                                 children=[
                                     html.Div(id="main-content"),
                                     html.Div(
@@ -1082,7 +1372,8 @@ if __name__ == "__main__":
                                             )
                                         ],
                                     ),
-                                    html.Div(id="day-progression-panel", children=[], style={"display": "none", "marginTop": "10px"})
+                                    html.Div(id="day-progression-panel", children=[],
+                                             style={"display": "none", "marginTop": "10px"})
                                 ],
                             ),
                             html.Div(
@@ -1092,7 +1383,9 @@ if __name__ == "__main__":
                                     html.Pre(
                                         "Open a point, then click a subplot title '[Full]' to view sensor stats here.",
                                         id="txt-sensor-stats-body",
-                                        style={"whiteSpace": "pre-wrap", "fontFamily": "Consolas, monospace", "fontSize": "12px"}
+                                        style={"whiteSpace": "pre-wrap",
+                                               "fontFamily": "Consolas, monospace",
+                                               "fontSize": "12px"}
                                     )
                                 ],
                                 style=panel_hidden_style
@@ -1104,21 +1397,65 @@ if __name__ == "__main__":
         ],
     )
 
-    ###############################################################
+    @app.callback(
+        Output("store-refresh", "data"),
+        Input("interval-refresh", "n_intervals"),
+        State("store-app-state", "data"),
+    )
+    def refresh_data_periodically(n_intervals, app_state):
+        """
+        Periodically rebuild the processed session data from disk.
+
+        This keeps the viewer updated if new CSVs appear or existing ones change.
+        The callback only updates shared data and returns a refresh tick value.
+        """
+        try:
+            all_vis_live = Build_All_session_visual_data(
+                CSV_Output_dir=CSV_Output_dir,
+                Sampling_Period=Sampling_Period,
+                Baseline_thresholds=baseline_thresholds,
+                Point_classify_params=point_classify_params,
+                Interp_Max_Gap=1
+            )
+            shared["All_sessions_map"] = all_vis_live.get("All_sessions_map", {})
+            shared["Session_overview"] = all_vis_live.get("Session_overview", [])
+            shared["Session_selector_data"] = Build_set_session_select_data(
+                shared["All_sessions_map"], shared["Session_overview"], Session_sort_order="desc"
+            )
+        except Exception:
+            pass
+        return n_intervals
+
     @app.callback(
         Output("dropdown-session-run", "options"),
         Output("dropdown-session-run", "value"),
         Input("dropdown-session-date", "value"),
-        State("store-app-state", "data")
+        Input("store-refresh", "data"),
+        State("store-app-state", "data"),
     )
-    def update_run_dropdown_from_date(Selected_dates_value, App_state):
-        local = Build_set_session_select_data(All_sessions_map, Session_overview, Session_sort_order="desc")
-        run_keys = Filter_runs_by_date(local, Selected_dates_value)
-        opts = Build_run_options(run_keys, local, All_sessions_map)
-        selected = Default_run_set(local, run_keys)
-        if App_state and App_state.get("Selected_session_run_key") in run_keys:
-            selected = App_state.get("Selected_session_run_key")
-        return opts, selected
+    def update_run_dropdown_from_date(selected_date, _refresh_tick, app_state):
+        """
+        Update the session dropdown whenever:
+        - the selected date changes
+        - data refresh occurs
+
+        If refresh triggered the callback, keep the current dropdown value where possible.
+        """
+        ss = shared["Session_selector_data"]
+        asm = shared["All_sessions_map"]
+
+        run_keys = Filter_runs_by_date(ss, selected_date)
+        opts = Build_run_options(run_keys, ss, asm)
+
+        trig = _get_triggered_id()
+        if trig == "store-refresh":
+            return opts, no_update
+
+        current = (app_state or {}).get("Selected_session_run_key")
+        if current in run_keys:
+            return opts, current
+
+        return opts, Default_run_set(ss, run_keys)
 
     @app.callback(
         Output("store-app-state", "data"),
@@ -1132,7 +1469,7 @@ if __name__ == "__main__":
         Input("btn-page-next", "n_clicks"),
         Input("viewDayProgressionButton", "n_clicks"),
         Input({"type": "bed-card", "session_key": ALL}, "n_clicks"),
-        Input({"type": "point-tile", "pid": ALL}, "n_clicks"),
+        Input({"type": "point-tile", "pid": ALL, "session_key": ALL}, "n_clicks"),
         State("store-app-state", "data"),
         prevent_initial_call=True
     )
@@ -1150,8 +1487,18 @@ if __name__ == "__main__":
         point_tile_clicks,
         App_state
     ):
+        """
+        Main control callback for the application.
+
+        This callback listens to all user interactions that change navigation state.
+        It updates the stored app state, but does not render the page directly.
+        Rendering is handled separately by render_from_state().
+        """
+        asm = shared["All_sessions_map"]
+        ss = shared["Session_selector_data"]
+
         if App_state is None:
-            App_state = Build_startup_app_state(Session_selector_data)
+            App_state = Build_startup_app_state(ss)
 
         trig = _get_triggered_id()
 
@@ -1167,10 +1514,10 @@ if __name__ == "__main__":
         if trig == "dropdown-session-date":
             App_state["page_index"] = 0
             App_state["Selected_session_date"] = Selected_dates_value
-            run_keys = Filter_runs_by_date(Session_selector_data, Selected_dates_value)
-            default_run = Default_run_set(Session_selector_data, run_keys)
+            run_keys = Filter_runs_by_date(ss, Selected_dates_value)
+            default_run = Default_run_set(ss, run_keys)
             App_state["Selected_session_run_key"] = default_run
-            run_bed_keys = Pull_run_bed_keys(Session_selector_data, default_run)
+            run_bed_keys = Pull_run_bed_keys(ss, default_run)
             if run_bed_keys:
                 App_state["Selected_session_key"] = run_bed_keys[0]
             return Set_app_state_overview(App_state)
@@ -1178,7 +1525,7 @@ if __name__ == "__main__":
         if trig == "dropdown-session-run":
             App_state["page_index"] = 0
             App_state["Selected_session_run_key"] = Selected_run_value
-            run_bed_keys = Pull_run_bed_keys(Session_selector_data, Selected_run_value)
+            run_bed_keys = Pull_run_bed_keys(ss, Selected_run_value)
             if run_bed_keys and App_state.get("Selected_session_key") not in run_bed_keys:
                 App_state["Selected_session_key"] = run_bed_keys[0]
             return Set_app_state_overview(App_state)
@@ -1190,7 +1537,7 @@ if __name__ == "__main__":
         if trig in ["btn-page-prev", "btn-page-next"]:
             page_index = _safe_int(App_state.get("page_index", 0), 0)
             run_key = App_state.get("Selected_session_run_key")
-            run_bed_keys = Pull_run_bed_keys(Session_selector_data, run_key)
+            run_bed_keys = Pull_run_bed_keys(ss, run_key)
             base_keys = sorted(list(run_bed_keys or []), key=_bed_sort_key_from_session_key)
             if not base_keys:
                 App_state["page_index"] = 0
@@ -1210,25 +1557,33 @@ if __name__ == "__main__":
             return App_state
 
         if trig == "viewDayProgressionButton":
-            if App_state.get("Current_view") in ["bed", "day_progression"] and App_state.get("Selected_session_key") in All_sessions_map:
+            if App_state.get("Current_view") in ["bed", "day_progression"] and App_state.get("Selected_session_key") in asm:
                 App_state = click_nav_history(App_state)
                 App_state["Current_view"] = "day_progression"
                 App_state["Selected_sensor_name"] = None
                 App_state["Click_nonce"] = _safe_int(App_state.get("Click_nonce", 0), 0) + 1
             return App_state
 
+        
         if isinstance(trig, dict) and trig.get("type") == "bed-card":
             sk = trig.get("session_key")
-            if sk in All_sessions_map:
+            if sk in asm:
                 App_state = click_nav_history(App_state)
                 return Set_app_state_bed(App_state, sk)
             return App_state
 
+        
         if isinstance(trig, dict) and trig.get("type") == "point-tile":
             pid = _safe_int(trig.get("pid"), None)
+            sk = trig.get("session_key")
+
+            if sk:
+                App_state["Selected_session_key"] = sk
+
             if pid is not None:
                 App_state = click_nav_history(App_state)
                 return Set_app_state_point(App_state, pid)
+
             return App_state
 
         if trig == "main-graph" and clickData is not None:
@@ -1246,7 +1601,7 @@ if __name__ == "__main__":
         Output("main-graph", "figure"),
         Output("graph-card-wrapper", "style"),
         Output("txt-page-status", "children"),
-        Output("btn-page-prev", "style"),   
+        Output("btn-page-prev", "style"),
         Output("btn-page-next", "style"),
         Output("viewDayProgressionButton", "style"),
         Output("txt-sensor-stats-title", "children"),
@@ -1254,9 +1609,25 @@ if __name__ == "__main__":
         Output("panel-sensor-stats", "style"),
         Output("day-progression-panel", "children"),
         Output("day-progression-panel", "style"),
-        Input("store-app-state", "data")
+        Input("store-app-state", "data"),
+        Input("store-refresh", "data"),
     )
-    def render_from_state(App_state):
+    def render_from_state(App_state, _refresh_tick):
+
+        """
+        Render the visible UI from the current stored app state.
+
+        This callback decides:
+        - what main content to show
+        - whether a graph should be visible
+        - whether paging buttons should show
+        - whether the day progression panel should show
+        - whether the sensor stats panel should show
+        """
+
+        asm = shared["All_sessions_map"]
+        ss = shared["Session_selector_data"]
+
         if App_state is None:
             App_state = initial_state
 
@@ -1264,18 +1635,18 @@ if __name__ == "__main__":
         Selected_session_key = App_state.get("Selected_session_key")
         Selected_point_id = App_state.get("Selected_point_id")
         Selected_sensor_name = App_state.get("Selected_sensor_name")
-        Selected_session_date = App_state.get("Selected_session_date")
         Selected_session_run_key = App_state.get("Selected_session_run_key")
         Beds_per_page = _safe_int(App_state.get("Beds_per_page", 8), 8)
         page_index = _safe_int(App_state.get("page_index", 0), 0)
 
-        run_bed_keys = Pull_run_bed_keys(Session_selector_data, Selected_session_run_key)
+        run_bed_keys = Pull_run_bed_keys(ss, Selected_session_run_key)
         run_bed_keys = sorted(list(run_bed_keys or []), key=_bed_sort_key_from_session_key)
 
-        if run_bed_keys and Selected_session_key not in run_bed_keys:
-            App_state["Selected_session_key"] = run_bed_keys[0]
+        view_session_key = Selected_session_key
+        if Current_view in ["overview", "bed", "day_progression"]:
+            if run_bed_keys and view_session_key not in run_bed_keys:
+                view_session_key = run_bed_keys[0] if run_bed_keys else view_session_key
 
-        # paging calc 
         page_info = Build_Overview_pages(run_bed_keys, Beds_per_page, page_index) if run_bed_keys else {"page_index": 0, "page_count": 1}
         page_status = Build_Page_Button(page_info["page_index"], page_info["page_count"])["txt_page_status"]
 
@@ -1297,18 +1668,26 @@ if __name__ == "__main__":
         graph_fig = go.Figure()
         graph_style = {"display": "none"}
 
+        # The main content rendering logic is based on the Current_view in the app state.
+
         if Current_view == "overview":
-            main_children = Build_overview_cards(All_sessions_map, App_state, Session_selector_data)
+            tmp_state = dict(App_state)
+            tmp_state["Selected_session_key"] = view_session_key
+            main_children = Build_overview_cards(asm, tmp_state, ss)
             main_style = {"display": "block"}
 
         elif Current_view == "bed":
-            main_children = Build_bed_point_tiles(All_sessions_map, App_state)
+            tmp_state = dict(App_state)
+            tmp_state["Selected_session_key"] = view_session_key
+            main_children = Build_bed_point_tiles(asm, tmp_state)
             main_style = {"display": "block"}
 
         elif Current_view == "day_progression":
-            main_children = Build_bed_point_tiles(All_sessions_map, App_state)
+            tmp_state = dict(App_state)
+            tmp_state["Selected_session_key"] = view_session_key
+            main_children = Build_bed_point_tiles(asm, tmp_state)
             main_style = {"display": "block"}
-            day_children = build_day_progression_display(All_sessions_map, App_state, Session_selector_data)
+            day_children = build_day_progression_display(asm, tmp_state, ss)
             day_style = {
                 "display": "flex",
                 "flexDirection": "row",
@@ -1323,35 +1702,42 @@ if __name__ == "__main__":
             }
 
         elif Current_view == "point":
-            if Selected_session_key in All_sessions_map and Selected_point_id is not None:
+            if Selected_session_key in asm and Selected_point_id is not None:
                 graph_fig = Build_point_detail_view(
-                    All_sessions_map[Selected_session_key],
+                    asm[Selected_session_key],
                     Selected_point_id,
-                    Baseline_thresholds=Baseline_thresholds,
+                    Baseline_thresholds=baseline_thresholds,
                     Click_nonce=_safe_int(App_state.get("Click_nonce", 0), 0)
                 )
-            main_children = []
-            main_style = {"display": "none"}
-            graph_style = {"display": "block", "height": "78vh"}
+                main_children = []
+                main_style = {"display": "none"}
+                graph_style = {"display": "block"}
+            else:
+                main_children = html.Div("Selected point/session no longer available.", className="empty")
+                main_style = {"display": "block"}
 
         elif Current_view == "single_sensor_full":
             panel_style_out = panel_visible_style
-            if Selected_session_key in All_sessions_map and Selected_point_id is not None and Selected_sensor_name:
+            if Selected_session_key in asm and Selected_point_id is not None and Selected_sensor_name:
                 graph_fig = Build_single_sensor_view(
-                    All_sessions_map[Selected_session_key],
+                    asm[Selected_session_key],
                     Selected_point_id,
                     Selected_sensor_name,
-                    Baseline_thresholds=Baseline_thresholds
+                    Baseline_thresholds=baseline_thresholds
                 )
                 stats_title, stats_body = Build_selected_sensor_stats_display(
-                    All_sessions_map[Selected_session_key],
+                    asm[Selected_session_key],
                     Selected_point_id,
                     Selected_sensor_name,
-                    Baseline_thresholds=Baseline_thresholds
+                    Baseline_thresholds=baseline_thresholds
                 )
-            main_children = []
-            main_style = {"display": "none"}
-            graph_style = {"display": "block", "height": "78vh"}
+                main_children = []
+                main_style = {"display": "none"}
+                graph_style = {"display": "block"}
+            else:
+                main_children = html.Div("Selected sensor/session no longer available.", className="empty")
+                main_style = {"display": "block"}
+                panel_style_out = panel_hidden_style
 
         return (
             main_children,
@@ -1359,7 +1745,7 @@ if __name__ == "__main__":
             graph_fig,
             graph_style,
             page_status,
-            prev_btn_style,     
+            prev_btn_style,
             next_btn_style,
             day_btn_style,
             stats_title,
@@ -1368,4 +1754,38 @@ if __name__ == "__main__":
             day_children,
             day_style
         )
-    app.run(host="0.0.0.0", port=8050, debug=False)
+
+    return app, host, port, debug
+
+
+def run_dash_app(
+    csv_dir: str,
+    host: str = "127.0.0.1",
+    port: int = 8050,
+    debug: bool = False,
+    refresh_ms: int = 10000,
+    sampling_period_s: float = 5.0,
+    baseline_thresholds: dict | None = None,
+    point_classify_params: dict | None = None,
+):
+    app, h, p, d = create_dash_app(
+        csv_dir=csv_dir,
+        host=host,
+        port=port,
+        debug=debug,
+        refresh_ms=refresh_ms,
+        sampling_period_s=sampling_period_s,
+        baseline_thresholds=baseline_thresholds,
+        point_classify_params=point_classify_params,
+    )
+    app.run(host=h, port=p, debug=d)
+
+
+if __name__ == "__main__":
+    run_dash_app(
+        csv_dir=r"C:\Users\brand\source\repos\out_mock",
+        host="10.224.242.228",
+        port=8050,
+        debug=False,
+        refresh_ms=10000
+    )

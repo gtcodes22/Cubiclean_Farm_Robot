@@ -455,4 +455,10 @@ bed_num, point_num = increment_bed_point(bed_num, point_num)
 Jades send csv also needs to go after this each time
 ############################################################
 
+
+###########################################################
+if the bod doesnt power down between sessions throughout the day then this also needs to be called at the start of each new session 
+run_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+###########################################################
+
     """

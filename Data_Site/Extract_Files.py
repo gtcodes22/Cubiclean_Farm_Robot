@@ -1,19 +1,48 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-'''!
+
+"""
+
   @file Extract_Files.py
   @brief 
   @author Brandon-lee Craddock
   @maintainer Jade Cawley
   @version  V1.0
   @data 2026-03-03
-'''
+
+Cubiclean session extraction and visual data builder
+
+Main program flow
+
+1. Scan the CSV output directory and identify files that match the expected
+   naming format for bed, point, and timestamp.
+2. Group matching CSV files into bed sessions using:
+   Bed_ID + TimeStamp -> one session key.
+3. For each session:
+   - sort the point CSVs
+   - detect missing or duplicate points
+   - mark whether the session is complete
+4. Load each point CSV and convert its sensor columns into time-series data.
+5. Interpolate short gaps in the sensor readings and compare values against
+   baseline thresholds.
+6. Build sensor-level summaries for each point, then classify each point into
+   a colour status.
+7. Combine point-level results into a bed-level summary and classify the whole
+   bed session.
+8. Build final output structures used by the Dash app:
+   - All_sessions_map
+   - Session_overview
+   - Still_logging_session
+"""
+
 import os
 import re
 import csv
 
-# get reading attributes from filename of the csv, using a regular expression match
+
 def Extract_filename(file_name):
+    """Extract bed ID, point ID, and timestamp from a CSV filename."""
+
     m = re.match(r"^(BED\d+)_P([1-6])_(\d{4}-\d{2}-\d{2}_\d{4})\.csv$", file_name)
     if not m:
         return None
@@ -24,33 +53,34 @@ def Extract_filename(file_name):
         "CSV_Path": file_name,
     }
 
-# get all valid .csv files and return the parsed results
+
 def idx_sample_csvs(CSV_Output_dir):
+    """
+    Scan the CSV output directory and return data for all valid sample csvs.
+    only files matching the expected filename pattern are included.
+    """
     rows = []
-    
-    # check if directory exists
     if not os.path.isdir(CSV_Output_dir):
         return rows
 
-    # parse each file in the directory
     for fn in os.listdir(CSV_Output_dir):
-        # only parse .csv files
         if not fn.lower().endswith(".csv"):
             continue
-        
-        # get dataset attributes from file, skip if failed
         parsed = Extract_filename(fn)
         if parsed is None:
             continue
-            
-        # amend csv file path to include the directory that the file is in
         parsed["CSV_Path"] = os.path.join(CSV_Output_dir, fn)
-        
         rows.append(parsed)
+
     return rows
 
 
 def Sort_Bed_Samples(samples):
+    """
+    Sort a bed session's point samples by point ID and detect
+    - missing points
+    - duplicate points
+    """
     sorted_samples = sorted(samples, key=lambda x: int(x["Point_ID"]))
 
     seen = {}
@@ -66,6 +96,15 @@ def Sort_Bed_Samples(samples):
 
 
 def Group_data_by_bed(rows):
+
+    """
+    Group parsed CSV file rows into sessions using
+    Bed_ID + TimeStamp -> Session_Key
+
+    each grouped session is checked for missing or duplicate points and marked
+    as complete only if it contains exactly one csv for each point 1 to 6.
+    """
+
     grouped = {}
 
     for row in rows:
@@ -97,6 +136,14 @@ def Group_data_by_bed(rows):
 
 
 def Load_Sample_CSV(CSV_Path, Sampling_Period=5.0):
+
+    """
+    Load a single point csv and convert it into time-series channel data.
+
+    time is reconstructed using the sampling period rather than read directly
+    from the csv.
+    """
+
     time_s = []
 
     Temp_Air = []
@@ -125,12 +172,29 @@ def Load_Sample_CSV(CSV_Path, Sampling_Period=5.0):
             time_s.append(i * float(Sampling_Period))
             i += 1
 
+            
             Temp_Air.append(_to_float(row.get("p2.Temp_Air")))
             Humi_Air.append(_to_float(row.get("p2.Humi_Air")))
-            CO2_ppm.append(_to_float(row.get("p2.CO2_ppm")))
-            NH3_ppm.append(_to_float(row.get("p1.NH3_ppm")))
-            H2S_ppm.append(_to_float(row.get("p1.H2S_ppm")))
-            CH4_Vout.append(_to_float(row.get("p3.CH4_Vout")))
+
+            
+            CO2_ppm.append(_to_float(
+                row.get("p2.CO2_ppm") if row.get("p2.CO2_ppm") is not None else row.get("p3.CO2")
+            ))
+
+            
+            NH3_ppm.append(_to_float(
+                row.get("p1.NH3_ppm") if row.get("p1.NH3_ppm") is not None else row.get("d2.NH3")
+            ))
+            H2S_ppm.append(_to_float(
+                row.get("p1.H2S_ppm") if row.get("p1.H2S_ppm") is not None else row.get("d2.H2S")
+            ))
+
+            
+            CH4_Vout.append(_to_float(
+                row.get("p3.CH4_Vout") if row.get("p3.CH4_Vout") is not None else row.get("CH4_Vout")
+            ))
+
+           
 
     channels = {
         "Temp_Air": Temp_Air,
@@ -140,7 +204,8 @@ def Load_Sample_CSV(CSV_Path, Sampling_Period=5.0):
         "H2S_ppm": H2S_ppm,
         "CH4_Vout": CH4_Vout,
     }
-
+    # Build a matching valid flag array for each channel so later stages can
+    # distinguish real readings from missing data.
     valid_flags = {}
     for k, arr in channels.items():
         flags = []
@@ -159,6 +224,10 @@ def Load_Sample_CSV(CSV_Path, Sampling_Period=5.0):
 
 
 def Build_Bed_data(Session, Sampling_Period=5.0):
+    """
+    Load all point csvs for a single session and combine them into one bed data
+    structure keyed by point ID.
+    """
     points = {}
 
     for sample in Session.get("Samples", []):
@@ -178,6 +247,11 @@ def Build_Bed_data(Session, Sampling_Period=5.0):
 
 
 def Interpolate_short_gaps(values, valid_flags, max_gap=1):
+    """
+    Fill short runs of missing samples by linear interpolation when
+    - the gap length is within max_gap
+    - valid samples exist on both sides of the gap
+    """
     n = len(values)
     if n == 0:
         return [], []
@@ -224,6 +298,13 @@ def Interpolate_short_gaps(values, valid_flags, max_gap=1):
 
 
 def Reading_spikes(Point_Data, Baseline_thresholds, Interp_Max_Gap=1):
+    """
+    Process one point's sensor channels by
+    - interpolating short gaps
+    - checking whether each value is inside the threshold range
+    - marking values above the upper threshold
+    - calculating simple gradients
+    """
     time_s = list(Point_Data.get("time_s", []))
     raw_channels = Point_Data.get("channels", {})
     raw_valid_flags = Point_Data.get("valid_flags", {})
@@ -265,7 +346,7 @@ def Reading_spikes(Point_Data, Baseline_thresholds, Interp_Max_Gap=1):
                 above_baseline.append(0)
             else:
                 above_baseline.append(1 if v > vmax else 0)
-
+        # Calculate a simple per-sample gradient using the sampling period.
         gradients = [None]
         for i in range(1, len(interp_values)):
             v0 = interp_values[i - 1]
@@ -299,6 +380,18 @@ def Reading_spikes(Point_Data, Baseline_thresholds, Interp_Max_Gap=1):
 
 
 def Sum_point_sensor_data(time_s, Sensor_Channel_Data, Point_classify_params):
+
+    """
+    Build a sensor-level summary for one point channel.
+
+    This calculates the main statistics and assigns a sensor state such as
+    - NO_DATA 
+    - LOW_VALID  
+    - BASELINE 
+    - TRANSIENT_RISE 
+    - SETTLED_SPIKE 
+    """
+
     interp_values = list(Sensor_Channel_Data.get("interp_values", []))
     interp_valid = list(Sensor_Channel_Data.get("interp_valid", []))
     above_baseline = list(Sensor_Channel_Data.get("above_baseline", []))
@@ -351,6 +444,7 @@ def Sum_point_sensor_data(time_s, Sensor_Channel_Data, Point_classify_params):
 
     n_above = sum(1 for x in above_baseline if int(x) == 1)
 
+    # Find the longest consecutive run of above-threshold samples.
     max_consec = 0
     curr = 0
     for x in above_baseline:
@@ -363,6 +457,9 @@ def Sum_point_sensor_data(time_s, Sensor_Channel_Data, Point_classify_params):
 
     tail_values = []
     tail_grad_abs = []
+
+    # Use the tail of the signal to help decide whether the response is
+    # settled or transient.
 
     i0 = max(0, len(interp_values) - Tails_window_len)
     for i in range(i0, len(interp_values)):
@@ -422,6 +519,10 @@ def Sum_point_sensor_data(time_s, Sensor_Channel_Data, Point_classify_params):
 
 
 def Set_point_status(Point_Sensor_Summaries):
+    """
+    Convert the set of sensor states for one point into a single point colour.
+    """
+
     if not Point_Sensor_Summaries:
         return "grey"
 
@@ -444,6 +545,7 @@ def Set_point_status(Point_Sensor_Summaries):
         elif state == "TRANSIENT_RISE":
             n_transient += 1
 
+        # Give extra weighting to the main gas channels used in point grading.
         if sensor_name in key_gas:
             key_states.append(state)
 
@@ -463,6 +565,14 @@ def Set_point_status(Point_Sensor_Summaries):
 
 
 def Build_sum_for_each_point(Point_Data, Baseline_thresholds, Point_classify_params, Interp_Max_Gap=1):
+
+    """
+    Build the full processed output for one point including
+    - processed sensor traces
+    - sensor summaries
+    - final point colour grading
+    """
+
     Reading_spikes_out = Reading_spikes(
         Point_Data,
         Baseline_thresholds,
@@ -488,6 +598,9 @@ def Build_sum_for_each_point(Point_Data, Baseline_thresholds, Point_classify_par
 
 
 def Set_Bed_status(Bed_Point_Summaries):
+    """
+    Convert the set of point colours for one bed session into a single bed colour.
+    """
     if not Bed_Point_Summaries:
         return "grey"
 
@@ -512,6 +625,12 @@ def Set_Bed_status(Bed_Point_Summaries):
 
 
 def Build_Bed_Visual_data(Bed_Data, Baseline_thresholds, Point_classify_params, Interp_Max_Gap=1):
+    """
+    Build the final visual data structure for one bed session.
+
+    This combines all point-level outputs and adds the overall bed summary
+    used by the Dash app.
+    """
     Bed_point_sumup = {}
     Point_colour_map = {}
 
@@ -562,6 +681,9 @@ def Build_Bed_Visual_data(Bed_Data, Baseline_thresholds, Point_classify_params, 
 
 
 def Build_session_overview(Session_Key, bed_visual):
+    """
+    Build a compact summary row for one session to support overview displays.
+    """
     bed_status_summary = bed_visual.get("Bed_status_summary", {})
     return {
         "Session_Key": Session_Key,
@@ -577,6 +699,9 @@ def Build_session_overview(Session_Key, bed_visual):
 
 
 def Detect_still_logging_sessions(All_sessions_map):
+    """
+    Return the list of sessions that are not yet complete.
+    """
     Still_logging_session = []
     for Session_Key in sorted(All_sessions_map.keys()):
         bed_visual = All_sessions_map[Session_Key]
@@ -586,6 +711,10 @@ def Detect_still_logging_sessions(All_sessions_map):
 
 
 def Build_All_sessions_map(sessions, Sampling_Period, Baseline_thresholds, Point_classify_params, Interp_Max_Gap=1):
+    """
+    Build the full visual data map for all grouped sessions.
+
+    """
     All_sessions_map = {}
     for Session_Key in sorted(sessions.keys()):
         Session = sessions[Session_Key]
@@ -601,6 +730,11 @@ def Build_All_sessions_map(sessions, Sampling_Period, Baseline_thresholds, Point
 
 
 def Build_All_session_visual_data(CSV_Output_dir, Sampling_Period, Baseline_thresholds, Point_classify_params, Interp_Max_Gap=1):
+    """
+    Main extraction pipeline for the session visualisation data.
+
+    This is the main entry point used by the Dash app.
+    """
     rows = idx_sample_csvs(CSV_Output_dir)
     sessions = Group_data_by_bed(rows)
 
@@ -626,6 +760,9 @@ def Build_All_session_visual_data(CSV_Output_dir, Sampling_Period, Baseline_thre
 
 
 def Refresh_All_session_visual_data(CSV_Output_dir, Sampling_Period, Baseline_thresholds, Point_classify_params, Interp_Max_Gap=1):
+    """
+    Rebuild all session visual data from the current csv directory contents.
+    """
     return Build_All_session_visual_data(
         CSV_Output_dir=CSV_Output_dir,
         Sampling_Period=Sampling_Period,
@@ -636,6 +773,9 @@ def Refresh_All_session_visual_data(CSV_Output_dir, Sampling_Period, Baseline_th
 
 
 def Refresh_session_visual_data(CSV_Output_dir, Sampling_Period, Baseline_thresholds, Point_classify_params, Interp_Max_Gap=1):
+    """
+    Wrapper kept for compatibility with earlier naming.
+    """
     return Refresh_All_session_visual_data(
         CSV_Output_dir=CSV_Output_dir,
         Sampling_Period=Sampling_Period,
@@ -646,7 +786,7 @@ def Refresh_session_visual_data(CSV_Output_dir, Sampling_Period, Baseline_thresh
 
 
 if __name__ == "__main__":
-    TEST_DIR = r".\out_mock"
+    TEST_DIR = r"C:\Users\brand\source\repos\out_mock"
 
     Baseline_thresholds_classify = {
         "Temp_Air": {"Min": -10.0, "Max": 45.0},
