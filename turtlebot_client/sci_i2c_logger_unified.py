@@ -399,3 +399,54 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+    """
+########################################################
+    Add this to your script at the top helper functions: 
+########################################################
+
+
+    from datetime import datetime
+from your_logger_file import run_logger
+
+
+# create one fixed timestamp for the whole run
+run_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+
+# starting position in the run
+bed_num = 1
+point_num = 1
+
+
+def build_sample_name(bed_num, point_num, run_timestamp):
+    return f"BED{bed_num}_P{point_num}_{run_timestamp}"
+
+
+def increment_bed_point(bed_num, point_num):
+    if point_num < 6:
+        return bed_num, point_num + 1
+    return bed_num + 1, 1
+
+
+
+###########################################################
+each time you sample a location so the below 
+###########################################################
+
+csv_name = build_sample_name(bed_num, point_num, run_timestamp)
+
+run_logger(
+    name=csv_name,
+    duration_s=30,
+    CSV_Output_dir="out",
+    Sampling_Period=5.0,
+    Min_Sample_Period=5.0,
+    ADC_Channel=0,
+    ADC_Gain=1
+)
+
+bed_num, point_num = increment_bed_point(bed_num, point_num)
+
+    """
