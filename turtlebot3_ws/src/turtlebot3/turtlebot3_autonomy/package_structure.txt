@@ -1,0 +1,10 @@
+turtlebot3_ws/
+└── src/
+    ├── turtlebot3_autonomy/
+    │   ├── setup.py
+    │   ├── setup.cfg
+    │   ├── package.xml
+    │   └── turtlebot3_autonomy/
+    │       ├── __init__.py
+    │       ├── waypoint_mission.py
+    │       └── robot_monitor.py

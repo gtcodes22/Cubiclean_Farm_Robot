@@ -3,5 +3,5 @@
 PASSWORD="turtlebot"
 
 gnome-terminal -- bash -c "
-    sshpass -p '$PASSWORD' ssh cubiclean@172.20.10.2;
+    sshpass -p '$PASSWORD' ssh cubiclean@172.20.10.4;
     exec bash"
