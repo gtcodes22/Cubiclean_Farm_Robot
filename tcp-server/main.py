@@ -12,6 +12,9 @@
 import sys
 import random
 
+sys.path.insert(0, "../Data_Site")
+from cubiclean_bed_viewer_cards_refined import run_dash_app
+
 # program library imports
 from ThreadedTCPServer import *
 from server_ui import mainwindow
@@ -48,6 +51,16 @@ def main():
     # A 'daemon' thread terminates when the main thread terminates
     server_thread.daemon = True
     
+    dashThread = threading.Thread(target=run_dash_app, args=(), kwargs={
+        'csv_dir':r'.\OUT',
+        'host':'0.0.0.0',
+        'port':8050,
+        'debug':False,
+        'refresh_ms':5000
+        })
+    dashThread.name = 'Dash HTTP Server Thread'
+    dashThread.daemon = True
+    
     # debug print server ip and port
     #print(f'main: establishing server @ {ip}:{port}')
     
@@ -67,7 +80,7 @@ def main():
     '''
     
     # start running the QT app
-    mainwindow.start_ui(server, server_thread, qMain, qThread)
+    mainwindow.start_ui(server, server_thread, dashThread, qMain, qThread)
     
     # once the QT closes, shutdown the server and exit
     print("main: exiting program")

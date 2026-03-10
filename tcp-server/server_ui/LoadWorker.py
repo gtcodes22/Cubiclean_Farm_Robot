@@ -15,45 +15,76 @@ class LoadWorker(QThread):
     deviceDisconnected = Signal(bool)
     logQueueEvent = Signal(str)
     '''
-    def __init__(self, queue, server, serverThread):
+    def __init__(self, queue, server, serverThread, dashThread):
         super().__init__()
         self.qMain = queue
         self.server = server
         self.serverThread = serverThread
+        self.dashThread = dashThread
         
     def run(self):
         print("LW: Load Worker started")
-        
         self.nextLoadStep.emit(0)
+        
+        #
+        #
+        # START TCP SERVER
+        #
+        #
         
         # get ip and port of server address
         ip, port = self.server.server_address
     
         # start server thread and wait 0.5 seconds
-        print(f'main: establishing server @ {ip}:{port}')
+        print(f'LW: establishing server @ {ip}:{port}')
         self.serverThread.start()
         time.sleep(1)
         
         # if the server thread isn't created sucessfully, end the program
         if not self.serverThread.is_alive():
-            print("main: server thread crashed")
+            print("LW: server thread crashed")
             return
         
         print(f"LW: Server loop running in thread: {self.serverThread.name}")
         self.nextLoadStep.emit(25)
         
-        # testing loading the next step...
-        time.sleep(3)
-        self.nextLoadStep.emit(25)
-        print(f"LW: load 1")
+        #
+        #
+        # START DASH HTTP SERVER
+        #
+        #
         
         # testing loading the next step...
-        time.sleep(3)
+        print(f'LW: establishing dash http server')
+        self.dashThread.start()
+        time.sleep(1)
+        
+        # if the server thread isn't created sucessfully, end the program
+        if not self.dashThread.is_alive():
+            print("LW: dash http server thread crashed")
+            
+        print(f"LW: {self.dashThread.name} started successfully")
+        self.nextLoadStep.emit(25)
+        
+        #
+        #
+        # LOAD STEP 3
+        #
+        #
+        
+        # testing loading the next step...
+        time.sleep(2)
         self.nextLoadStep.emit(25)
         print(f"LW: load 2")
         
+        #
+        #
+        # LOAD STEP 4
+        #
+        #
+        
         # testing loading the next step...
-        time.sleep(3)
+        time.sleep(2)
         self.nextLoadStep.emit(25)
         print(f"LW: load 3")
         

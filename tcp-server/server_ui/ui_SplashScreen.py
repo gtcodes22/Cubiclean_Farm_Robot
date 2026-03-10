@@ -128,6 +128,6 @@ class Ui_MainWindow(object):
         self.Quit.setText(QCoreApplication.translate("MainWindow", u"\u274c", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"An operating system for everyone.", None))
         self.label_5.setText("")
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Version: 0.3.1", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Version: 0.3.2", None))
     # retranslateUi
 

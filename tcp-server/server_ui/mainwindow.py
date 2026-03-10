@@ -387,7 +387,7 @@ class MainWindow(QMainWindow):
             self.qMain.put(QueueEvent(NET_RESPONSE, 'RPI', msg = 'Getting Missing CSV/LOG Files...'))
                 
         
-def start_ui(server, serverThread, qMain, qThread):
+def start_ui(server, serverThread, dashThread, qMain, qThread):
     # start QApplication
     app = QApplication(sys.argv)
     
@@ -395,7 +395,7 @@ def start_ui(server, serverThread, qMain, qThread):
     QGuiApplication.styleHints().setColorScheme(Qt.ColorScheme.Light)
         
     # set up worker thread to start TCP Server and Dartly HTTP server
-    loaderThread = LoadWorker(qMain, server, serverThread)
+    loaderThread = LoadWorker(qMain, server, serverThread, dashThread)
     
     # main program widget
     widget = MainWindow(server, qMain, qThread)
