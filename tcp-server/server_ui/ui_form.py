@@ -331,7 +331,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Cubiclean Robot Server 0.2.2", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Cubiclean Robot Server 0.3.0", None))
         self.label_28.setText(QCoreApplication.translate("MainWindow", u"Battery", None))
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"Disconnected", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"Disconnected", None))

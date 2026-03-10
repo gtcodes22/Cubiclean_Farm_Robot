@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, "../tcp-server")
 
 import argparse
-import socket
+import socket as Socket
 from packet import *
 from is_socket_closed import *
 from query_handler import *
@@ -34,7 +34,15 @@ def run_query_handler(ipport, socket, turtlebot):
         # check if socket is still connected
         if pdata == '' and is_socket_closed(socket):
             print(f"query handler: connection with {serverAddr} terminated without a proper goodbye :(")
-            exit()
+            
+            # send signal to bot_main.py thread through local socket
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect(('127.0.0.1',1993))
+                s.sendall(f'/EXIT'.encode('utf-8'))
+            
+            turtlebot.closing = True
+            
+            sys.exit()
             
         # allow server to end client here. If a bug in the code below
         # results in an unhandled exception, this will allow the server
@@ -43,6 +51,7 @@ def run_query_handler(ipport, socket, turtlebot):
             print(f'query handler: server {serverAddr} closed client')
             # build packet and send reponse
             dataOut = bytes(f'client closed down', 'utf-8')
+            turtlebot.closing = True
             return
         
         # get length of data from packet
@@ -72,6 +81,16 @@ def run_query_handler(ipport, socket, turtlebot):
                     # these messages are commands handled by the server
                     socket.sendall(message_handler(packet, turtlebot))
                     
+                    # if /EXIT command sent, close this thread and signal
+                    # to main thread to close
+                    with Socket.socket(Socket.AF_INET, Socket.SOCK_STREAM) as s:
+                        s.connect(('127.0.0.1',1993))
+                        s.sendall('/EXIT'.encode('utf-8'))
+                    
+                    turtlebot.closing = False
+                    socket.close()
+                    exit()
+                    
                 else:
                     print(f"query handler: Recv {packet.mtype}({packet.length} bytes) from {packet.src}")
       
@@ -100,7 +119,9 @@ def message_handler(packet, turtlebot):
     
     if packet.data.upper().startswith('/EXIT'):
         print(f"query handler: ending connection with {packet.src}")
-        exit()
+        description = 'bot client exiting signal'
+        response = f'bot client exiting'
+        turtlebot.closing = True
         
     elif packet.data.upper().startswith('/SETUP'):
         description = 'device properties'
@@ -129,13 +150,13 @@ def message_handler(packet, turtlebot):
         
     elif packet.data.upper().startswith('/BATTERY'):
         description = 'device battery life'
-        response = f'{turtlebot.get_battery_life()}%'
+        response = f'/BATTERY:{turtlebot.get_battery_life()}'
     elif packet.data.upper().startswith('/SPEEDCM'):
         description = 'device speed (in cm/s)'
-        response = f'{turtlebot.get_speed_cm_ps()}'
+        response = f'/SPEEDCM:{turtlebot.get_speed_cm_ps()}'
     elif packet.data.upper().startswith('/PROGRESS'):
         description = 'device scan progress'
-        response = f'{turtlebot.get_progress()}%'
+        response = f'/PROGRESS:{turtlebot.get_progress()}'
         
     dataOut = construct_packet('SPC', packet.src, 'MSG', response)
     print(f"query handler: sending {description} to TCP Server")

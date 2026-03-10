@@ -1,7 +1,10 @@
 import argparse
 import csv
 import time
+import sys
 import os
+import socket
+import threading
 
 from datetime import datetime
 from sci_i2c_logger_unified import run_logger, Merge_row_dicts, Set_Headers
@@ -18,29 +21,41 @@ def increment_bed_point(bed_num, point_num):
 def bot_get_readings(bed_num=0, point_num=0, ):
     args = parser.parse_args()
     
+    # create one fixed timestamp for the whole run
+    run_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+    
+    # generate csv filename
+    csv_name = build_sample_name(bed_num, point_num, run_timestamp)
+    CSV_Output_dir="out_test"
+    csv_path = f"{CSV_Output_dir}\\{csv_name}.csv"
+    
+    # create Odom getter thread
+    odom_thread = threading.Thread(
+        target=odomcsv.main, args=(f'{csv_path[:-4]}_odom.csv'),
+        kwargs=None)
+    odom_thread.name = "Rameez's Script: Odom reading getter"
+    odom_thread.daemon = True
+    
     #######################################################################
     ####
     #### STAGE 1 - BRANDON'S FUNCTION
     ####
     #######################################################################
-    
-    # create one fixed timestamp for the whole run
-    run_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
 
     # if valid bed/point numbers are not provided, go with a default of 1,1
     bed_num = bed_num if (bed_num > 0) else 1 
     point_num = point_num if (point_num > 0) else 1
-    
-    # generate csv filename
-    csv_name = build_sample_name(bed_num, point_num, run_timestamp)
-    CSV_Output_dir="out_test"
-    csv_path = f"{CSV_Output_dir}/{csv_name}.csv"
-    
+
     print(f'i: writing sensor data to {csv_path}')
     
     # run sensor script with standard parameters
     try:
         if not args.test:
+            # odom needs to run in parallel with run_logger function
+            print('starting odom thread')
+            odom_thread.start()
+            
+            print('starting run_logger function')
             run_logger(
                 name=csv_name,
                 duration_s=30,
@@ -62,7 +77,7 @@ def bot_get_readings(bed_num=0, point_num=0, ):
         print(f'exception: run_logger raised {e}, running in test mode! csv will have zero values')
     
         # generate a test csv
-        write_test_file(csv_name)
+        write_test_file(csv_path)
     
     # increment point number to 6, then restart at 1 and increment bed number
     bed_num, point_num = increment_bed_point(bed_num, point_num)
@@ -78,11 +93,12 @@ def bot_get_readings(bed_num=0, point_num=0, ):
     
     if args.test:
         write_test_file_odom(f'{csv_path[:-4]}_odom.csv')
-    else:
-        try:
-            odomcsv.main(f'{csv_path[:-4]}_odom.csv')
-        except Exception as e:
-            print(f'exception: odomcsv raised {e}, running in test mode! csv will have zero values')
+    #else:
+    #    try:
+            #odomcsv.main(f'{csv_path[:-4]}_odom.csv')
+    #    except Exception as e:
+    #        print(f'exception: odomcsv raised {e}, running in test mode! csv will have zero values')
+    #        write_test_file_odom(f'{csv_path[:-4]}_odom.csv')
             
     
     #######################################################################
@@ -90,7 +106,11 @@ def bot_get_readings(bed_num=0, point_num=0, ):
     #### STAGE 3 - JADE'S FUNCTION
     ####
     #######################################################################
-    print('FIN')
+    # send written csv files to bot_main.py script
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect(('127.0.0.1',1993))
+        s.sendall(f'{csv_path},'.encode('utf-8'))
+        s.sendall(f'{csv_path[:-4]}_odom.csv'.encode('utf-8'))
     
     
     
@@ -120,6 +140,9 @@ def write_test_file(csv_path):
     
     # get directory from csv_path
     CSV_Output_dir = csv_path[:csv_path.rfind('\\')]
+    
+    print(f'writting to {CSV_Output_dir} dir')
+    print(f'csv_path: {csv_path}')
     
     # if the output folder doesn't exist, create it!
     if not os.path.isdir(CSV_Output_dir):

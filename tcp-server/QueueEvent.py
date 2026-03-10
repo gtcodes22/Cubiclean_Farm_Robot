@@ -5,6 +5,7 @@ SERVER_ERROR = 2
 DEVICE_CONNECTED = 10
 DEVICE_DISCONNECTED = 11
 DEVICE_GOT_CONFIG = 12
+DEVICE_UPDATE = 13
 
 NET_MSG = 20
 NET_DAT = 21
@@ -32,11 +33,16 @@ class QueueEvent():
             self.width = kwargs['width']
             self.height = kwargs['height']
             self.description = f'{device} sent config'
+        elif type == DEVICE_UPDATE:
+            self.src = kwargs['src']
+            self.property = kwargs['property']
+            self.value = kwargs['value']
             
         elif type == NET_MSG:
             self.msg = kwargs['msg']
             self.description = f'{device} sent network message 💬'
         elif type == NET_DAT:
+            self.filename = kwargs['filename']
             self.data = kwargs['data']
             self.description = f'{device} sent network data 📊'
         elif type == NET_IMG:

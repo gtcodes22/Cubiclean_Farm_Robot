@@ -1,6 +1,6 @@
 class TurtleBot():
     def __init__(self):
-        pass
+        self.closing = False
         
     # functions that need developing
     def get_battery_life(self):

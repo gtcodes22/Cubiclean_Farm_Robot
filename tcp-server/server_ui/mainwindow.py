@@ -1,6 +1,7 @@
 # This Python file uses the following encoding: utf-8
 import sys
 import struct
+import os
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QLabel
 from PySide6.QtCore import Qt, QObject, QThread, Signal, Slot, QSize, QTimer#, pyqtSignal
@@ -104,7 +105,7 @@ class MainWindow(QMainWindow):
         
         # Window icon
         self.setWindowIcon(QIcon('cow.png'))
-        self.ver = '0.2.2'
+        self.ver = '0.3.0'
         # need to incorporate being able to change the ports in the interface
         self.port = 1991    
         self.broadcastPort = 1995
@@ -172,10 +173,12 @@ class MainWindow(QMainWindow):
         
         # Queue Watcher signals
         self.qwThread.newNetMessage.connect(self.recieveMessageApp)
+        self.qwThread.newCSVfile.connect(self.recieveCSVfile)
         self.qwThread.serverEND.connect(self.close_server)
         self.qwThread.deviceConnected.connect(self.device_connected)
         self.qwThread.deviceDisconnected.connect(self.device_disconnected)
         self.qwThread.logQueueEvent.connect(self.ui.textEdit_SystemLog.append)
+        self.qwThread.updateDeviceStatus.connect(self.update_device_status)
 
     # from: https://www.w3resource.com/python-exercises/pyqt/python-pyqt-connecting-signals-to-slots-exercise-11.php
     def closeEvent(self, event):
@@ -268,6 +271,7 @@ class MainWindow(QMainWindow):
         data = self.get_file(True)
         
         # add image representation of a data file to chat log (?)
+        pass
         
     def get_file(self, isDat):
         """
@@ -310,6 +314,9 @@ class MainWindow(QMainWindow):
         sock.close()
         
     def ping_for_update(self):
+        # disable for now
+        return
+        
         # if the app is connected
         if self.server.appSocket:
             sendMessage(self.ui, self.qMain, message = '/BATTERY')
@@ -319,10 +326,34 @@ class MainWindow(QMainWindow):
             sendMessage(self.ui, self.qMain, True, message='/BATTERY')
             sendMessage(self.ui, self.qMain, True, message='/SPEEDCM')
             sendMessage(self.ui, self.qMain, True, message='/PROGRESS')
+            
+    def update_device_status(self, src, prop, val):
+        self.appDebug(f'i: updating_device_status')
+        if src == 'APP':
+            if prop == 'battery':
+               pass 
+        elif src == 'RPI':
+            pass
 
     def appDebug(self, msg):
         print(msg)
         self.ui.textEdit_SystemLog.append(msg)
+        
+    def recieveCSVfile(self, fullFilePath, filedata):
+        # get directory and filename from full file path
+        dir = fullFilePath[:fullFilePath.rfind('\\')]
+        
+        # if the output folder doesn't exist, create it!
+        if not os.path.isdir(dir):
+            os.makedirs(dir)
+        
+        # write file to matching directory
+        with open(fullFilePath, "w", newline="") as f:
+            f.write(filedata)
+        
+        self.appDebug(f'wrote csv file to {fullFilePath}')
+            
+        
         
 def start_ui(server, serverThread, qMain, qThread):
     # start QApplication
