@@ -119,6 +119,10 @@ def main():
                 continue
             elif msg.upper().endswith('.CSV'):
                 for filename in msg.split(','):
+                    # last minute edit to convert filepaths from linux to
+                    # windows
+                    filename.replace('/','\\')
+                    
                     print(f'sending {filename} to TCP Server')
                     send_csv_data_to_server(serverSocket, filename)
                 
