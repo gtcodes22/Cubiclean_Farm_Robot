@@ -16,3 +16,4 @@ data_viewer/Release Build.lnk
 turtlebot_client/out_test/*
 turtlebot_client/out/*.log
 tcp-server/out_test/*
+tcp-server/out/*

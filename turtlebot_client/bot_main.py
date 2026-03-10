@@ -57,7 +57,7 @@ def main():
     # from: https://coderivers.org/blog/interprocess-communication-python/#shared-memory
     localSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     localSocket.bind(('127.0.0.1',1993))
-    
+
     # connect to tcp server
     print(f'i: connecting to TCP Server at {ipAddress}:{port}')
     serverSocket = socket.create_connection((ipAddress,port))

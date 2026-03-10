@@ -23,6 +23,16 @@ def send_csv_data_to_server(sock, filename):
     # send to server
     sock.sendall(packet)
     
+def get_csv_packet(filename):
+    StringData = ''
+    
+    # read input file
+    with open(filename, "r", newline="") as f:
+        StringData = f.read()
+    
+    # convert string data to bytes
+    return construct_packet('RPI', 'SPC', 'DAT', filename + '\x00' + StringData)
+    
 # test sending csvs to server
 if __name__ == '__main__':
     import socket

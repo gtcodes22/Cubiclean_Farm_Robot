@@ -211,10 +211,14 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # reset timeout
                 self.request.settimeout(20)
                 
-                # echo whole message back to client
-                print(f"server: echo '{pdata.rstrip()}' to {clientAddr}")
-                self.request.sendall(bytes(pdata, 'utf-8'))
-                qMain.put(QueueEvent(NET_RESPONSE, device, msg = pdata))
+                # don't echo
+                pdata = ''#pdata.rstrip()
+                
+                if len(pdata) != 0:
+                    # echo whole message back to client
+                    print(f"server: echo '{pdata}' to {clientAddr}")
+                    self.request.sendall(bytes(pdata, 'utf-8'))
+                    qMain.put(QueueEvent(NET_RESPONSE, device, msg = pdata))
                 
             """
             # get response from main thread
@@ -243,10 +247,12 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             
     # this handles how the server responds to incoming 'MSG' type messages
     def message_handler(self, packet):
+        qMain = self.server.qMain
+        
         if packet.data == 'EXIT':
             qMain.put(QueueEvent(DEVICE_DISCONNECTED, packet.src))
             print(f"server: ending connection with {self.client_address[0]}")
-            return
+            exit()
             
         elif packet.data[:5] == 'SETUP':
             # let qMain know that a connection has initiated

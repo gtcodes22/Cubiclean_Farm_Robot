@@ -28,7 +28,7 @@ def clickTest():
 def returnTest():
     print("tap!")
     
-def sendMessage(ui, qMain, isPi = False, message = ''):
+def sendMessage(ui, qMain, isPi = False, message = '', logIt = True):
     # add src and destination to message
     src = 'SPC'
     des = 'APP'
@@ -47,13 +47,15 @@ def sendMessage(ui, qMain, isPi = False, message = ''):
     if isPi:
         if msg == '':
             msg = str(ui.lineEdit_rpi.text())
-        ui.lineEdit_rpi.clear()
-        qMain.put(QueueEvent(NET_RESPONSE, 'RPI', msg = msg))
+            ui.lineEdit_rpi.clear()
+        if logIt:
+            qMain.put(QueueEvent(NET_RESPONSE, 'RPI', msg = msg))
     else:
         if msg == '':
             msg = str(ui.lineEdit_app.text())
-        ui.lineEdit_app.clear()
-        qMain.put(QueueEvent(NET_RESPONSE, 'APP', msg = msg))
+            ui.lineEdit_app.clear()
+        if logIt:
+            qMain.put(QueueEvent(NET_RESPONSE, 'APP', msg = msg))
         
     # get length of message and convert it into 4 bytes, big endian
     length = struct.pack('>i', len(msg))
@@ -64,7 +66,6 @@ def sendMessage(ui, qMain, isPi = False, message = ''):
     
     if ui.checkBox_sendAsPlainText.isChecked() == False:
         packet = construct_packet(src, des, cat, msg)
-    
     
     print(f'ui: sending {packet}')
     return packet
@@ -105,7 +106,7 @@ class MainWindow(QMainWindow):
         
         # Window icon
         self.setWindowIcon(QIcon('cow.png'))
-        self.ver = '0.3.0'
+        self.ver = '0.3.1'
         # need to incorporate being able to change the ports in the interface
         self.port = 1991    
         self.broadcastPort = 1995
@@ -144,7 +145,7 @@ class MainWindow(QMainWindow):
         
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.ping_for_update)
-        self.update_timer.start(5000)
+        #self.update_timer.start(5000)
         
         # connect QueueWatcher signals
         #self.qwThread.newNetMessage.connect()
@@ -195,16 +196,19 @@ class MainWindow(QMainWindow):
 
     @Slot(bool)
     def device_connected(self, arg):
-        self.ping_for_update()
         ui = self.ui
         if arg:
             ui.lineEdit_rpi.setEnabled(True)
-            ui.label_BotConnectStatus.setText('✅ Device Connected') 
+            ui.label_BotConnectStatus.setText('✅ Device Connected')
+            self.get_missing_csv_files()
         else:
             ui.pushButton_app_sendImg.setEnabled(True)
             ui.pushButton_app_sendDat.setEnabled(True)
             ui.lineEdit_app.setEnabled(True)
             ui.label_AppConnectStatus.setText('✅ Device Connected')
+        
+        # get updates from devices
+        self.ping_for_update()
 
     @Slot(bool)
     def device_disconnected(self, arg):
@@ -315,17 +319,21 @@ class MainWindow(QMainWindow):
         
     def ping_for_update(self):
         # disable for now
-        return
+        #return
         
         # if the app is connected
         if self.server.appSocket:
-            sendMessage(self.ui, self.qMain, message = '/BATTERY')
+            packet = sendMessage(self.ui, self.qMain, message = '/BATTERY', logIt = False)
+            self.server.appSocket.sendall(packet)
+            qMain.put(QueueEvent(NET_MSG, 'APP', msg = 'Getting App Status...'))
         
         # if the turtlebot is connected
         if self.server.botSocket:
-            sendMessage(self.ui, self.qMain, True, message='/BATTERY')
-            sendMessage(self.ui, self.qMain, True, message='/SPEEDCM')
-            sendMessage(self.ui, self.qMain, True, message='/PROGRESS')
+            packet = sendMessage(self.ui, self.qMain, True, message='/BATTERY', logIt = False)
+            packet += sendMessage(self.ui, self.qMain, True, message='/SPEEDCM', logIt = False)
+            packet += sendMessage(self.ui, self.qMain, True, message='/PROGRESS', logIt = False)
+            #self.server.botSocket.sendall(packet)
+            #self.qMain.put(QueueEvent(NET_RESPONSE, 'RPI', msg = 'Getting Bot Status...'))
             
     def update_device_status(self, src, prop, val):
         self.appDebug(f'i: updating_device_status')
@@ -352,8 +360,32 @@ class MainWindow(QMainWindow):
             f.write(filedata)
         
         self.appDebug(f'wrote csv file to {fullFilePath}')
+    
+    def get_missing_csv_files(self):
+        # if the turtlebot is connected
+        if self.server.botSocket:
+            msg = '/GET_MISSING_CSV:'
+            OUT_DIR = os.path.join('.', 'OUT')
+            OUTTEST_DIR = os.path.join('.', 'OUT_TEST')
             
-        
+            # if folders don't exist, create them
+            if not os.path.isdir(OUT_DIR):
+                os.makedirs(OUT_DIR)
+            if not os.path.isdir(OUTTEST_DIR):
+                os.makedirs(OUTTEST_DIR)
+                
+            # build list of files in each folder and send to bot
+            for filename in os.listdir(OUT_DIR):
+                if filename.lower().endswith('.csv') or filename.lower().endswith('.log'):
+                    msg += os.path.join(OUT_DIR, filename) + ','
+            for filename in os.listdir(OUTTEST_DIR):
+                if filename.lower().endswith('.csv') or filename.lower().endswith('.log'):
+                    msg += os.path.join(OUTTEST_DIR, filename) + ','
+                
+            packet = sendMessage(self.ui, self.qMain, True, message = msg, logIt = False)
+            self.server.botSocket.sendall(packet)
+            self.qMain.put(QueueEvent(NET_RESPONSE, 'RPI', msg = 'Getting Missing CSV/LOG Files...'))
+                
         
 def start_ui(server, serverThread, qMain, qThread):
     # start QApplication
