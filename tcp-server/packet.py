@@ -1,5 +1,5 @@
 class PacketMessage():
-    def __init__(self, address, str_utf8):
+    def __init__(self, address, str_utf8, length = -1):
         self.address = address
         self.str_utf8 = str_utf8
         
@@ -7,7 +7,15 @@ class PacketMessage():
         self.src = str_utf8[:3].upper()
         self.des = str_utf8[3:6].upper()
         self.mtype = str_utf8[6:9].upper()
-        self.length = int.from_bytes(bytes(str_utf8[9:13], 'utf-8'), 'big')
+        self.length = length
+        
+        # bug here! we shouldn't be reading the length from the string, as
+        # it doesn't comply with utf-8 (it's the raw value written as bytes
+        # in big endian. For short messages it is fine, but this will need
+        # to be fixed for all uses of packet in future
+        if self.length == -1:
+            self.length = int.from_bytes(bytes(str_utf8[9:13], 'utf-8'), 'big')
+        
         self.data = str_utf8[13:13 + self.length]
         self.end = str_utf8[-3:]
         

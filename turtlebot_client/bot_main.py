@@ -10,6 +10,8 @@ import threading
 from query_handler import *
 import time
 import sys
+from send_csv import *
+from is_socket_closed import *
 
 def main():
     args = parser.parse_args()
@@ -50,20 +52,12 @@ def main():
         # get ip address and port number from command line argument
         ipAddress = args.ipaddress.split(':')[0]
         port = args.ipaddress.split(':')[1]
-    #
-    #
-    # load ROS
-    #
-    #
-    print('w: could not load ROS')
     
-    #
-    #
-    # initialise sensors
-    #
-    #
-    print('w: could not initialise sensors')
-    
+    # set up socket for listening from data script
+    # from: https://coderivers.org/blog/interprocess-communication-python/#shared-memory
+    localSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    localSocket.bind(('127.0.0.1',1993))
+
     # connect to tcp server
     print(f'i: connecting to TCP Server at {ipAddress}:{port}')
     serverSocket = socket.create_connection((ipAddress,port))
@@ -76,33 +70,82 @@ def main():
     qh_thread.daemon = True
     qh_thread.start()
     
+    # start listening on socket
+    localSocket.listen(1)
+    isRunning = True
+    
+    turtlebot.closing = False
+    
+    # send initial message to server
+    send_msg_to_server(serverSocket, 'Hi TCP Server!')
+    
+    # Loop: whenever we recieve a filename on the local socket, send
+    # that file to the server
+    while isRunning:
+        # new connection
+        conn, addr = None, None
+        try:
+            conn, addr = localSocket.accept()
+            isConnected = True
+        except Exception as e:
+            print(f"bot_main: connection with server raised {e} :(")
+            isRunning = False
+            turtlebot.closing = True
+            continue
+            
+        print('bot_main: local connection made')
+        
+        while isConnected:
+            # attempt to get data
+            try:
+                raw = conn.recv(1024)
+                msg = str(raw, 'utf-8')
+                print(f'bot_main: Got: "{msg}"')
+            except TimeoutError:
+                continue
+            except ConnectionResetError:
+                print(f"bot_main: local socket terminated without a proper goodbye :(")
+                isConnected = False
+        
+            # check if socket is still connected
+            if msg == '' and is_socket_closed(conn):
+                print('local socket closed')
+                isConnected = False
+
+            if msg.upper().startswith('/EXIT'):
+                isConnected = False
+                isRunning = False
+                localSocket.close()
+                continue
+            elif msg.upper().endswith('.CSV'):
+                for filename in msg.split(','):
+                    # last minute edit to convert filepaths from linux to
+                    # windows
+                    filename.replace('/','\\')
+                    
+                    print(f'sending {filename} to TCP Server')
+                    send_csv_data_to_server(serverSocket, filename)
+                
+                
+        # check to see if the bot is closing
+        isRunning = not turtlebot.closing
+    
     # ADD AWESOME CODE HERE!
     # Just test code
-    for i in range(5):
-        send_msg_to_server(serverSocket, f'iteration {i}')
-        time.sleep(2)
+    #for i in range(5):
+    #    send_msg_to_server(serverSocket, f'iteration {i}')
+    
+    # read and send a file to the TCP Server
+    #send_csv_data_to_server(serverSocket, 'test,1,2')
     
     # wait for qh_thread to end
+    print('waiting for qh_thread to end')
     qh_thread.join()
     
     # call this when program ends
     serverSocket.close()
     sys.exit()
 
-def send_msg_to_server(sock, StringData):
-    # convert string data to bytes
-    packet = construct_packet('RPI', 'SPC', 'MSG', StringData)
-    
-    # send to server
-    sock.sendall(packet)
-
-def send_csv_data_to_server(sock, StringData):
-    # 
-    # convert string data to bytes
-    packet = construct_packet('RPI', 'SPC', 'DAT', StringData)
-    
-    # send to server
-    sock.sendall(packet)
 
 if __name__ == "__main__":
     # set up arguments for script

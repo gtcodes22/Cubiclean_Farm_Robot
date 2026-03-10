@@ -40,7 +40,7 @@ def is_socket_closed(sock: socket.socket) -> bool:
             print(canWrite)
             return True
         '''
-        
+
     except BlockingIOError:
         return False  # socket is open and reading from it would block
     except ConnectionResetError:

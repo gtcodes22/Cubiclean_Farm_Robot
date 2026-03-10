@@ -1,6 +1,10 @@
-import roslibpy
 import time
 import csv
+try:
+    import roslibpy
+except ImportError:
+    print('w: could not import ROS 2 related libraries!')
+
 
 # GLOBAL VARIABLES
 x_list = []
@@ -10,10 +14,13 @@ duration = 120  # seconds to record
 
 
 
-def main():
+def main(csv_path = ''):
     # Connect to ROS
     client = connect_to_ros()
+    
+    # never fail silently! makes for fustrating bug hunting
     if not client:
+        print('e: client failed to initialise')
         return
 
     # Subscribe to odometry
@@ -25,10 +32,9 @@ def main():
         time.sleep(0.1)  # keep program alive
 
     # Stop ROS client and save CSV
-    print("120 seconds reached. Stopping collection.")
+    print(f"{duration} seconds reached. Stopping collection.")
     client.terminate()
-    create_csv()
-
+    create_csv(csv_path)
 
 
 def connect_to_ros():
@@ -61,8 +67,8 @@ def subscribe_to_odom(client):
 
 
 
-def create_csv():
-    with open('odom_data.csv', 'w', newline='') as file:
+def create_csv(csv_path='odom_data.csv'):
+    with open(csv_path, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['x','y'])
         for x, y in zip(x_list, y_list):

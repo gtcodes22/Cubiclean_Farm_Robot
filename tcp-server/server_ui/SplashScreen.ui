@@ -184,6 +184,26 @@ QPushButton:pressed {
       <pixmap resource="images.qrc">:/splash.png</pixmap>
      </property>
     </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>120</y>
+       <width>201</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel{
+	color: rgb(0, 0, 0);
+	font-size:28px;
+	font-family:calibri;
+}</string>
+     </property>
+     <property name="text">
+      <string>Version: 0.3.1</string>
+     </property>
+    </widget>
     <zorder>label_5</zorder>
     <zorder>progressBar</zorder>
     <zorder>label</zorder>
@@ -191,6 +211,7 @@ QPushButton:pressed {
     <zorder>status</zorder>
     <zorder>Quit</zorder>
     <zorder>label_4</zorder>
+    <zorder>label_3</zorder>
    </widget>
   </widget>
  </widget>

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-
-
+import sys
+sys.path.insert(0, "..\\chemical_sensor_drivers")
 
 import argparse
 import csv
@@ -9,12 +9,14 @@ import re
 import time
 from datetime import datetime
 
-import DFRobot_RP2040_SCI as sci
-import board
-import busio
-import adafruit_ads1x15.ads1115 as ADS
-
-
+try:
+    import DFRobot_RP2040_SCI as sci
+    import board
+    import busio
+    import adafruit_ads1x15.ads1115 as ADS
+except ImportError as e:
+    print('w: could not import sensor modules related libraries!')
+    
 # I2C ADDRESSES 
 DAQ1_I2C_ADDR = 0x21
 DAQ2_I2C_ADDR = 0x22
@@ -386,7 +388,9 @@ def _parse_args():
 
 def main():
     args = _parse_args()
-    run_logger(
+    
+    # run logger and get csv path
+    csv_path = run_logger(
         name=args.name,
         duration_s=args.duration,
         CSV_Output_dir=args.outdir,
@@ -395,6 +399,14 @@ def main():
         ADC_Channel=args.adc_channel,
         ADC_Gain=args.adc_gain
     )
+    
+    # rameez's data processing
+    run_odometry_view("odom_data.csv")
+    
+    # open csv files
+        
+        
+    # send to server
 
 
 if __name__ == "__main__":

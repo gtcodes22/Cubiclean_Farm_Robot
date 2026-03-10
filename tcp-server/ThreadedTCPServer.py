@@ -61,7 +61,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             pdata = ''
             try:
                 raw = self.request.recv(13)
-                pdata = str(raw, 'utf-8')
+                # bug fix here, need to handle length seperately as it is
+                # not utf-8 compliant
+                pdata = str(raw[:9], 'utf-8') + ' ' * 4
                     
             except TimeoutError:
                 # may add a queue event here if necessary
@@ -69,6 +71,11 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 continue
             except ConnectionResetError:
                 print(f"server: connection with {clientAddr} terminated without a proper goodbye :(")
+                if device != 'Unknown':
+                    qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
+                exit()
+            except Exception as e:
+                print(f"server: connection with {clientAddr} raised {e} :(")
                 if device != 'Unknown':
                     qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
                 exit()
@@ -80,6 +87,10 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
                 exit()
                 
+            # ignore empty packets
+            if pdata == '':
+                continue
+            
             # allow client to end server here. If a bug in the code below
             # results in an unhandled exception, this will allow a client
             # to connect to the server and shut it down and restart it with
@@ -124,7 +135,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     # request rest of packet
                     data = ''
                     try:
-                        data = str(self.request.recv(length + 5), 'utf-8')
+                        data = str(self.request.recv(length + 4), 'utf-8')
                     except TimeoutError:
                         # add a queue event here if needed
                         #qMain.put('INCOMPLETE PACKET')
@@ -137,7 +148,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                         exit()
                 
                     # construct Packet object
-                    packet = PacketMessage(self.client_address[0], pdata + data)
+                    packet = PacketMessage(self.client_address[0], pdata + data, length)
                     
                     # let qMain know that a connection has initiated and pass the 
                     # socket and device name to the queue
@@ -150,22 +161,27 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                         elif device == 'RPI':
                             self.server.botSocket = self.request
                             
-                    # print data recieved to terminal
-                    if packet.mtype == 'MSG':
+                    # send packet object to main thread
+                    if packet.mtype.upper() == 'MSG':
                         print(f"server: Recv MSG:'{packet.data}' from {packet.src}")
                         
                         # these messages are commands handled by the server
                         qMain.put(QueueEvent(NET_MSG, device, msg = packet.data))
                         self.message_handler(packet)
                         
-                    else:
-                        print(f"server: Recv {packet.mtype}({packet.length} bytes) from {packet.src}")
-
-                    # send packet object to main thread
-                    if packet.mtype.upper() == 'DAT':
-                        qMain.put(QueueEvent(NET_DAT, device, data = packet.data))
-                    else:
+                    elif packet.mtype.upper() == 'DAT':
+                        filenameIndex = packet.data.find('\x00')
+                        filename = packet.data[:filenameIndex]
+                        # exclude the null character
+                        file_data = packet.data[filenameIndex+1:]
+                        qMain.put(QueueEvent(NET_DAT, device, filename = filename, data = packet.data))
+                        
+                    elif packet.mtype.upper() == 'IMG':
                         qMain.put(QueueEvent(NET_IMG, device, data = packet.data))
+                        
+                    else:
+                        # invalid mtype, print mtype and length to terminal
+                        print(f"server: Recv {packet.mtype}({packet.length} bytes) from {packet.src}")
                     
                 except TimeoutError as e:
                     print(f'server: connection time out for {clientAddr}')
@@ -195,10 +211,14 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # reset timeout
                 self.request.settimeout(20)
                 
-                # echo whole message back to client
-                print(f"server: echo '{pdata.rstrip()}' to {clientAddr}")
-                self.request.sendall(bytes(pdata, 'utf-8'))
-                qMain.put(QueueEvent(NET_RESPONSE, device, msg = pdata))
+                # don't echo
+                pdata = ''#pdata.rstrip()
+                
+                if len(pdata) != 0:
+                    # echo whole message back to client
+                    print(f"server: echo '{pdata}' to {clientAddr}")
+                    self.request.sendall(bytes(pdata, 'utf-8'))
+                    qMain.put(QueueEvent(NET_RESPONSE, device, msg = pdata))
                 
             """
             # get response from main thread
@@ -227,10 +247,12 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             
     # this handles how the server responds to incoming 'MSG' type messages
     def message_handler(self, packet):
+        qMain = self.server.qMain
+        
         if packet.data == 'EXIT':
             qMain.put(QueueEvent(DEVICE_DISCONNECTED, packet.src))
             print(f"server: ending connection with {self.client_address[0]}")
-            return
+            exit()
             
         elif packet.data[:5] == 'SETUP':
             # let qMain know that a connection has initiated
@@ -265,6 +287,21 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             print(f"server: sending device properties to {self.client_address[0]}")
             self.request.sendall(dataOut)
             qMain.put(QueueEvent(NET_RESPONSE, device, msg = configStr))
+        elif packet.data.upper().startswith('/BATTERY:'):
+            prop = 'battery'
+            val = packet[9:]
+            qMain.put(QueueEvent(DEVICE_UPDATE, packet.src,
+                property = prop, value = val))
+        elif packet.data.upper().startswith('/SPEEDCM:'):
+            prop = 'speed-cm'
+            val = packet[9:]
+            qMain.put(QueueEvent(DEVICE_UPDATE, packet.src,
+                property = prop, value = val))
+        elif packet.data.upper().startswith('/PROGRESS:'):
+            prop = 'bed scan progress'
+            val = packet[10:]
+            qMain.put(QueueEvent(DEVICE_UPDATE, packet.src,
+                property = prop, value = val))
     
     '''
     # obsolete function, was used in the original to handle the device

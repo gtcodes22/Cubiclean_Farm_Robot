@@ -16,10 +16,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QGridLayout, QHBoxLayout,
-    QLabel, QLayout, QLineEdit, QMainWindow,
-    QMenuBar, QProgressBar, QPushButton, QScrollArea,
-    QSizePolicy, QSpacerItem, QSpinBox, QStatusBar,
-    QTabWidget, QTextEdit, QVBoxLayout, QWidget)
+    QLabel, QLayout, QLineEdit, QListWidget,
+    QListWidgetItem, QMainWindow, QMenuBar, QProgressBar,
+    QPushButton, QScrollArea, QSizePolicy, QSpacerItem,
+    QSpinBox, QStatusBar, QTabWidget, QTextEdit,
+    QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -37,32 +38,14 @@ class Ui_MainWindow(object):
         self.tab_systemOverview.setObjectName(u"tab_systemOverview")
         self.gridLayout = QGridLayout(self.tab_systemOverview)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.horizontalLayout_7 = QHBoxLayout()
-        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
-        self.label_28 = QLabel(self.tab_systemOverview)
-        self.label_28.setObjectName(u"label_28")
+        self.label_AppConnectStatus2 = QLabel(self.tab_systemOverview)
+        self.label_AppConnectStatus2.setObjectName(u"label_AppConnectStatus2")
 
-        self.horizontalLayout_7.addWidget(self.label_28)
+        self.gridLayout.addWidget(self.label_AppConnectStatus2, 1, 1, 1, 1)
 
-        self.progressBar_2 = QProgressBar(self.tab_systemOverview)
-        self.progressBar_2.setObjectName(u"progressBar_2")
-        self.progressBar_2.setMinimumSize(QSize(80, 20))
-        self.progressBar_2.setValue(56)
+        self.horizontalSpacer_6 = QSpacerItem(160, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.horizontalLayout_7.addWidget(self.progressBar_2)
-
-
-        self.gridLayout.addLayout(self.horizontalLayout_7, 2, 0, 1, 1)
-
-        self.label_10 = QLabel(self.tab_systemOverview)
-        self.label_10.setObjectName(u"label_10")
-
-        self.gridLayout.addWidget(self.label_10, 1, 1, 1, 1)
-
-        self.label_9 = QLabel(self.tab_systemOverview)
-        self.label_9.setObjectName(u"label_9")
-
-        self.gridLayout.addWidget(self.label_9, 1, 0, 1, 1)
+        self.gridLayout.addItem(self.horizontalSpacer_6, 6, 2, 1, 1)
 
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
@@ -86,6 +69,93 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addLayout(self.horizontalLayout_9, 4, 0, 1, 1)
 
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.label_13 = QLabel(self.tab_systemOverview)
+        self.label_13.setObjectName(u"label_13")
+
+        self.horizontalLayout_5.addWidget(self.label_13)
+
+        self.progressBar = QProgressBar(self.tab_systemOverview)
+        self.progressBar.setObjectName(u"progressBar")
+        self.progressBar.setMinimumSize(QSize(80, 20))
+        self.progressBar.setValue(79)
+
+        self.horizontalLayout_5.addWidget(self.progressBar)
+
+
+        self.gridLayout.addLayout(self.horizontalLayout_5, 2, 1, 1, 1)
+
+        self.label_3 = QLabel(self.tab_systemOverview)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setAutoFillBackground(False)
+        self.label_3.setStyleSheet(u"color: rgb(0, 0, 0);\n"
+"font: 16pt \"Segoe UI\";")
+        self.label_3.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout.addWidget(self.label_3, 0, 2, 1, 1)
+
+        self.label_14 = QLabel(self.tab_systemOverview)
+        self.label_14.setObjectName(u"label_14")
+
+        self.gridLayout.addWidget(self.label_14, 4, 2, 1, 1)
+
+        self.label_httpsaddress = QLabel(self.tab_systemOverview)
+        self.label_httpsaddress.setObjectName(u"label_httpsaddress")
+
+        self.gridLayout.addWidget(self.label_httpsaddress, 2, 2, 1, 1)
+
+        self.horizontalSpacer_5 = QSpacerItem(160, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer_5, 6, 1, 1, 1)
+
+        self.label = QLabel(self.tab_systemOverview)
+        self.label.setObjectName(u"label")
+        self.label.setStyleSheet(u"color: rgb(0, 0, 0);\n"
+"font: 16pt \"Segoe UI\";")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(160, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer, 6, 0, 1, 1)
+
+        self.label_BotConnectStatus2 = QLabel(self.tab_systemOverview)
+        self.label_BotConnectStatus2.setObjectName(u"label_BotConnectStatus2")
+
+        self.gridLayout.addWidget(self.label_BotConnectStatus2, 1, 0, 1, 1)
+
+        self.label_2 = QLabel(self.tab_systemOverview)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setAutoFillBackground(False)
+        self.label_2.setStyleSheet(u"color: rgb(0, 0, 0);\n"
+"font: 16pt \"Segoe UI\";")
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout.addWidget(self.label_2, 0, 1, 1, 1)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout.addItem(self.verticalSpacer, 7, 0, 1, 1)
+
+        self.horizontalLayout_7 = QHBoxLayout()
+        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
+        self.label_28 = QLabel(self.tab_systemOverview)
+        self.label_28.setObjectName(u"label_28")
+
+        self.horizontalLayout_7.addWidget(self.label_28)
+
+        self.progressBar_2 = QProgressBar(self.tab_systemOverview)
+        self.progressBar_2.setObjectName(u"progressBar_2")
+        self.progressBar_2.setMinimumSize(QSize(80, 20))
+        self.progressBar_2.setValue(56)
+
+        self.horizontalLayout_7.addWidget(self.progressBar_2)
+
+
+        self.gridLayout.addLayout(self.horizontalLayout_7, 2, 0, 1, 1)
+
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
         self.label_29 = QLabel(self.tab_systemOverview)
@@ -103,51 +173,15 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addLayout(self.horizontalLayout_8, 3, 0, 1, 1)
 
-        self.horizontalSpacer_4 = QSpacerItem(202, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.label_tcpaddress = QLabel(self.tab_systemOverview)
+        self.label_tcpaddress.setObjectName(u"label_tcpaddress")
 
-        self.gridLayout.addItem(self.horizontalSpacer_4, 0, 2, 1, 1)
+        self.gridLayout.addWidget(self.label_tcpaddress, 1, 2, 1, 1)
 
-        self.horizontalLayout_5 = QHBoxLayout()
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.label_13 = QLabel(self.tab_systemOverview)
-        self.label_13.setObjectName(u"label_13")
+        self.listWidget_threads = QListWidget(self.tab_systemOverview)
+        self.listWidget_threads.setObjectName(u"listWidget_threads")
 
-        self.horizontalLayout_5.addWidget(self.label_13)
-
-        self.progressBar = QProgressBar(self.tab_systemOverview)
-        self.progressBar.setObjectName(u"progressBar")
-        self.progressBar.setMinimumSize(QSize(0, 20))
-        self.progressBar.setValue(79)
-
-        self.horizontalLayout_5.addWidget(self.progressBar)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_5.addItem(self.horizontalSpacer)
-
-
-        self.gridLayout.addLayout(self.horizontalLayout_5, 2, 1, 1, 1)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout.addItem(self.verticalSpacer, 5, 0, 1, 1)
-
-        self.label = QLabel(self.tab_systemOverview)
-        self.label.setObjectName(u"label")
-        self.label.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"font: 16pt \"Segoe UI\";")
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
-
-        self.label_2 = QLabel(self.tab_systemOverview)
-        self.label_2.setObjectName(u"label_2")
-        self.label_2.setAutoFillBackground(False)
-        self.label_2.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"font: 16pt \"Segoe UI\";")
-        self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout.addWidget(self.label_2, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.listWidget_threads, 5, 2, 1, 1)
 
         self.tabWidget.addTab(self.tab_systemOverview, "")
         self.tab_netChat = QWidget()
@@ -324,22 +358,26 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Cubiclean Robot Server 0.2.2", None))
-        self.label_28.setText(QCoreApplication.translate("MainWindow", u"Battery", None))
-        self.label_10.setText(QCoreApplication.translate("MainWindow", u"Disconnected", None))
-        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Disconnected", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Cubiclean Robot Server 0.3.1", None))
+        self.label_AppConnectStatus2.setText(QCoreApplication.translate("MainWindow", u"Disconnected", None))
         self.label_30.setText(QCoreApplication.translate("MainWindow", u"Current Bed Progress", None))
-        self.label_29.setText(QCoreApplication.translate("MainWindow", u"Total Progress", None))
         self.label_13.setText(QCoreApplication.translate("MainWindow", u"Battery", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"TCP Server", None))
+        self.label_14.setText(QCoreApplication.translate("MainWindow", u"Current running threads", None))
+        self.label_httpsaddress.setText(QCoreApplication.translate("MainWindow", u"Serving HTTPS on", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Turtlebot", None))
+        self.label_BotConnectStatus2.setText(QCoreApplication.translate("MainWindow", u"Disconnected", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Data Viewer", None))
+        self.label_28.setText(QCoreApplication.translate("MainWindow", u"Battery", None))
+        self.label_29.setText(QCoreApplication.translate("MainWindow", u"Total Progress", None))
+        self.label_tcpaddress.setText(QCoreApplication.translate("MainWindow", u"Serving TCP on", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_systemOverview), QCoreApplication.translate("MainWindow", u"Overview", None))
         self.label_rpi.setText(QCoreApplication.translate("MainWindow", u"Raspberry Pi", None))
         self.label_BotConnectStatus.setText(QCoreApplication.translate("MainWindow", u"\u274c Device Disconnected", None))

@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'SplashScreen.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.10.2
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -94,6 +94,14 @@ class Ui_MainWindow(object):
         self.label_5.setGeometry(QRect(0, 0, 811, 481))
         self.label_5.setFrameShape(QFrame.Shape.NoFrame)
         self.label_5.setPixmap(QPixmap(u":/splash.png"))
+        self.label_3 = QLabel(self.frame)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setGeometry(QRect(10, 120, 201, 31))
+        self.label_3.setStyleSheet(u"QLabel{\n"
+"	color: rgb(0, 0, 0);\n"
+"	font-size:28px;\n"
+"	font-family:calibri;\n"
+"}")
         self.label_5.raise_()
         self.progressBar.raise_()
         self.label.raise_()
@@ -101,6 +109,7 @@ class Ui_MainWindow(object):
         self.status.raise_()
         self.Quit.raise_()
         self.label_4.raise_()
+        self.label_3.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -119,5 +128,6 @@ class Ui_MainWindow(object):
         self.Quit.setText(QCoreApplication.translate("MainWindow", u"\u274c", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"An operating system for everyone.", None))
         self.label_5.setText("")
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Version: 0.3.1", None))
     # retranslateUi
 
