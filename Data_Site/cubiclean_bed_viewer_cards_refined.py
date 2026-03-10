@@ -9,7 +9,8 @@ Main program flow
 
 1. Load and process all CSV session data using Build_All_session_visual_data().
 2. Build session/date/run lookup data for the dropdowns and determine the default selections, usually from the most recent available run.
-3. Create the initial app state used to track the current view and selections. This is stored in a dcc.Store and updated via callbacks whenever the user clicks or changes controls. The app state includes:
+3. Create the initial app state used to track the current view and selections. This is stored in a dcc.Store
+and updated via callbacks whenever the user clicks or changes controls. The app state includes:
     - Current_view: overview, bed, point, single_sensor_full, or day_progression
     - Selected_session_key: the unique key for the selected session/bed
     - Selected_point_id: the currently selected point (1-6) when in point or single_sensor_full view
@@ -20,20 +21,20 @@ Main program flow
    - top controls for date, session and beds/page selection
    - navigation buttons for home, back, page navigation, and day progression
    - main content area that conditionally renders based on the current view in the app state
-   - graph area 
+   - graph area
    - sensor stats area that shows stats for the currently selected sensor when in single_sensor_full view
-   
-5. Periodically refresh the processed data so new/updated runs can appear. 
 
-6. Use one callback to update the stored app state whenever the user clicks or changes controls. 
+5. Periodically refresh the processed data so new/updated runs can appear.
 
-7. Use one render callback to turn the stored app state into visible page content. 
-    This callback reads the current view and selections from the app state and calls helper functions to build the appropriate content for that view. 
+6. Use one callback to update the stored app state whenever the user clicks or changes controls.
+
+7. Use one render callback to turn the stored app state into visible page content.
+    This callback reads the current view and selections from the app state and calls helper functions to build the appropriate content for that view.
 
 8. Support drill-down navigation:
-   Overview -> Bed -> Point -> Single sensor full view 
-   plus day progression and back/home navigation. 
-   
+   Overview -> Bed -> Point -> Single sensor full view
+   plus day progression and back/home navigation.
+
 """
 
 
@@ -58,11 +59,11 @@ SENSOR_LABELS = {
     "CH4_Vout": "CH₄ Vout (V)",
 }
 
-# helper functions 
+# helper functions
 ###############################################################
 
 def _safe_int(value, default=0):
-   
+
     """Safely convert a value to an integer returning a default if conversion fails."""
 
     try:
@@ -72,7 +73,7 @@ def _safe_int(value, default=0):
 
 
 def _safe_float(value, default=None):
-   
+
     """Safely convert a value to a float returning a default if conversion fails."""
 
     try:
@@ -84,7 +85,7 @@ def _safe_float(value, default=None):
 
 
 def _rect_poly_xy(x0, y0, x1, y1):
-   
+
     """Return the x and y coordinates for a rectangle polygon defined by the corners (x0, y0) and (x1, y1)."""
 
     return [x0, x1, x1, x0, x0], [y0, y0, y1, y1, y0]
@@ -105,7 +106,7 @@ def _split_session_key(Session_Key):
 def _extract_session_date(TimeStamp):
 
     """Extract the date portion from a timestamp string in the form 'YYYY-MM-DD...'."""
-    
+
     if not isinstance(TimeStamp, str):
         return None
     return TimeStamp[:10] if len(TimeStamp) >= 10 else None
@@ -149,7 +150,7 @@ def _status_class_from_colour(colour_name: str):
 
 def _get_triggered_id():
     """
-    Return the ID of the input that triggered the current callback. 
+    Return the ID of the input that triggered the current callback.
 
     This supports both normal Dash component IDs and pattern-matching IDs.
     """
@@ -171,6 +172,37 @@ def _get_triggered_id():
         except Exception:
             return prop_id
     return prop_id
+
+
+def _pattern_click_count(triggered_id):
+    """
+    For a pattern-matching component, return the n_clicks value that belongs
+    to the triggered component.
+
+    This is used to ignore components that have merely been rendered but not
+    actually clicked by the user.
+    """
+    if not isinstance(triggered_id, dict):
+        return 0
+
+    try:
+        inputs_grouped = callback_context.inputs_list
+    except Exception:
+        return 0
+
+    if not isinstance(inputs_grouped, list):
+        return 0
+
+    for group in inputs_grouped:
+        if not isinstance(group, list):
+            continue
+        for item in group:
+            if not isinstance(item, dict):
+                continue
+            if item.get("id") == triggered_id:
+                return _safe_int(item.get("value"), 0)
+
+    return 0
 
 
 ###############################################################
@@ -239,7 +271,7 @@ def Pull_run_bed_keys(Session_selector_data, Selected_session_run_key):
 def Build_run_options(Run_keys_on_date, Session_selector_data, All_sessions_map):
 
     """
-    Build the visible dropdown labels for the selected day's runs. 
+    Build the visible dropdown labels for the selected day's runs.
 
     Each option includes:
     - run label
@@ -301,7 +333,7 @@ def Build_set_session_select_data(All_sessions_map, Session_overview=None, Sessi
     - default selected bed session key
 
     """
-    
+
     if Session_overview is None:
         Session_overview = []
 
@@ -452,7 +484,7 @@ def Set_app_state_bed(App_state, Selected_session_key):
     parts = _split_session_key(Selected_session_key)
     dt = _extract_session_date(parts.get("TimeStamp"))
     # Update the selected date and run to match the chosen session key so the dropdowns stay in sync with the current bed.
-    
+
     if dt is not None:
         App_state["Selected_session_date"] = dt
     if parts.get("TimeStamp") is not None:
@@ -554,7 +586,7 @@ def Build_overview_cards(All_sessions_map, App_state, Session_selector_data):
     run_bed_keys = Pull_run_bed_keys(Session_selector_data, Selected_session_run_key)
     run_bed_keys = sorted(list(run_bed_keys or []), key=_bed_sort_key_from_session_key)
     # If no bed sessions exist for the selected run, show a message instead of the overview grid.
-    
+
     if not run_bed_keys:
         return html.Div("No beds exist for this run/date selection.", className="empty")
 
@@ -605,7 +637,6 @@ def Build_bed_point_tiles(All_sessions_map, App_state):
     """
     Selected_session_key = App_state.get("Selected_session_key")
     # If the selected session key is missing or invalid, show a fallback message.
-   
 
     if not Selected_session_key or Selected_session_key not in All_sessions_map:
         return html.Div("No bed selected.", className="empty")
@@ -617,7 +648,7 @@ def Build_bed_point_tiles(All_sessions_map, App_state):
     Complete = _safe_int(Bed_visual.get("Complete", 0), 0)
 
     Point_colour_map = Bed_visual.get("Point_colour_map", {}) if isinstance(Bed_visual.get("Point_colour_map", {}), dict) else {}
-    
+
     header = html.Div(
         [
             html.Div(f"{Bed_ID}", style={"fontWeight": "800", "fontSize": "16px"}),
@@ -660,9 +691,11 @@ def Build_subplot_customdata(Sensor_channel, Point_ID=None, Click_nonce=0):
     return {"Target": "sensor_fullview_button", "Sensor_channel": Sensor_channel, "Point_ID": Point_ID, "Click_nonce": Click_nonce}
 
 
-def Set_selected_sensor_name_from_click(clickData):
+def Set_selected_sensor_name_from_click(clickData, Expected_click_nonce=None):
     """
     Extract the selected sensor name from the graph clickData payload.
+
+    Reject stale clicks by checking the click nonce stored in customdata.
     """
 
     try:
@@ -674,15 +707,25 @@ def Set_selected_sensor_name_from_click(clickData):
     if isinstance(click_customdata, list) and click_customdata and isinstance(click_customdata[0], dict):
         click_customdata = click_customdata[0]
 
-    if isinstance(click_customdata, dict) and click_customdata.get("Target") == "sensor_fullview_button":
-        return click_customdata.get("Sensor_channel")
-    return None
+    if not isinstance(click_customdata, dict):
+        return None
+
+    if click_customdata.get("Target") != "sensor_fullview_button":
+        return None
+
+    clicked_nonce = _safe_int(click_customdata.get("Click_nonce"), None)
+    expected_nonce = _safe_int(Expected_click_nonce, None)
+
+    if expected_nonce is not None and clicked_nonce != expected_nonce:
+        return None
+
+    return click_customdata.get("Sensor_channel")
 
 
 def _count_threshold_excursions(above_baseline, interp_valid):
 
     """Count the number of times the signal goes above the baseline threshold while being valid."""
-    
+
     if not isinstance(above_baseline, list) or not isinstance(interp_valid, list):
         return 0
     n = min(len(above_baseline), len(interp_valid))
@@ -755,7 +798,7 @@ def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=N
     point_sumup = {}
     # check that the data we expect is actually in the structure
     # and of the right type before we try to access it
-    
+
     if isinstance(Bed_visual.get("Bed_point_sumup", {}), dict):
         point_sumup = Bed_visual.get("Bed_point_sumup", {}).get(pid, {}) or {}
 
@@ -767,7 +810,7 @@ def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=N
     Baseline_thresholds = Baseline_thresholds or {}
 
     # If time or channel data is missing, return an empty figure with a message.
-    
+
     if not channels or not time_s:
         fig = go.Figure()
         fig.add_annotation(x=0.5, y=0.5, xref="paper", yref="paper",
@@ -779,7 +822,7 @@ def Build_point_detail_view(Bed_visual, Selected_point_id, Baseline_thresholds=N
         return fig
 
     fig = make_subplots(rows=2, cols=3, horizontal_spacing=0.08, vertical_spacing=0.16)
-    # we iterate through the sensors in the defined order and add traces to the corresponding subplot 
+    # we iterate through the sensors in the defined order and add traces to the corresponding subplot
     # for each sensor that has data.
     for idx, sensor_name in enumerate(sensor_order):
         r = (idx // 3) + 1
@@ -1029,7 +1072,7 @@ def Build_single_sensor_view(Bed_visual, Selected_point_id, Selected_sensor_name
     Reading_spikes_out = point_sumup.get("Reading_spikes_out", {})
     time_s = list(Reading_spikes_out.get("time_s", []))
     channels = Reading_spikes_out.get("channels", {})
-    
+
     if not isinstance(channels, dict) or Selected_sensor_name not in channels or not time_s:
         fig.add_annotation(
             x=0.5, y=0.5, xref="paper", yref="paper",
@@ -1564,16 +1607,22 @@ def create_dash_app(
                 App_state["Click_nonce"] = _safe_int(App_state.get("Click_nonce", 0), 0) + 1
             return App_state
 
-        
         if isinstance(trig, dict) and trig.get("type") == "bed-card":
+            bed_clicks = _pattern_click_count(trig)
+            if bed_clicks <= 0:
+                return App_state
+
             sk = trig.get("session_key")
             if sk in asm:
                 App_state = click_nav_history(App_state)
                 return Set_app_state_bed(App_state, sk)
             return App_state
 
-        
         if isinstance(trig, dict) and trig.get("type") == "point-tile":
+            point_clicks = _pattern_click_count(trig)
+            if point_clicks <= 0:
+                return App_state
+
             pid = _safe_int(trig.get("pid"), None)
             sk = trig.get("session_key")
 
@@ -1588,7 +1637,10 @@ def create_dash_app(
 
         if trig == "main-graph" and clickData is not None:
             if App_state.get("Current_view") == "point":
-                s = Set_selected_sensor_name_from_click(clickData)
+                s = Set_selected_sensor_name_from_click(
+                    clickData,
+                    Expected_click_nonce=App_state.get("Click_nonce", 0)
+                )
                 if s:
                     App_state = click_nav_history(App_state)
                     return Set_app_state_sensor(App_state, s)
@@ -1600,6 +1652,7 @@ def create_dash_app(
         Output("main-content", "style"),
         Output("main-graph", "figure"),
         Output("graph-card-wrapper", "style"),
+        Output("main-graph", "clickData"),
         Output("txt-page-status", "children"),
         Output("btn-page-prev", "style"),
         Output("btn-page-next", "style"),
@@ -1744,6 +1797,7 @@ def create_dash_app(
             main_style,
             graph_fig,
             graph_style,
+            None,
             page_status,
             prev_btn_style,
             next_btn_style,
@@ -1784,7 +1838,7 @@ def run_dash_app(
 if __name__ == "__main__":
     run_dash_app(
         csv_dir=r"C:\Users\brand\source\repos\out_mock",
-        host="10.224.242.228",
+        host="10.224.242.1",
         port=8050,
         debug=False,
         refresh_ms=10000
