@@ -1,14 +1,13 @@
 # from: https://www.geeksforgeeks.org/python/python-import-module-from-different-directory/
 import sys
-sys.path.insert(0, "../tcp-server")
-
 import os
 import argparse
-import socket as Socket
-from packet import *
-from is_socket_closed import *
-from query_handler import *
-from send_csv import *
+import socket as Socket # CHANGE THIS!
+from server.packet import *
+from server.is_socket_closed import *
+
+from .query_handler import *
+from .send_csv import *
 
 def run_query_handler(ipport, socket, turtlebot):
     serverAddr = ipport[0]
@@ -129,8 +128,8 @@ def message_handler(packet, turtlebot):
         turtlebot.closing = True
         
     elif packet.data.upper().startswith('/GET_MISSING_CSV'):
-        OUT_DIR = os.path.join('.', 'OUT')
-        OUTTEST_DIR = os.path.join('.', 'OUT_TEST')
+        OUT_DIR = os.path.join('.', 'bed_data')
+        #OUTTEST_DIR = os.path.join('.', 'OUT_TEST')
         
         # get start of file names
         fnIndex = packet.data.index(':') + 1
@@ -143,12 +142,12 @@ def message_handler(packet, turtlebot):
         # if folders don't exist, create them
         if not os.path.isdir(OUT_DIR):
             os.makedirs(OUT_DIR)
-        if not os.path.isdir(OUTTEST_DIR):
-            os.makedirs(OUTTEST_DIR)
+        #if not os.path.isdir(OUTTEST_DIR):
+        #    os.makedirs(OUTTEST_DIR)
         
         # build list of files in each folder
         bot_files = [os.path.join(OUT_DIR, x) for x in os.listdir(OUT_DIR)]
-        bot_files += [os.path.join(OUTTEST_DIR, x) for x in os.listdir(OUTTEST_DIR)]
+        #bot_files += [os.path.join(OUTTEST_DIR, x) for x in os.listdir(OUTTEST_DIR)]
 
         print(f'bot files {bot_files}')
         

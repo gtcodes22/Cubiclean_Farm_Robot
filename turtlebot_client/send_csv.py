@@ -1,7 +1,4 @@
-import sys
-sys.path.insert(0, "../tcp-server")
-
-from packet import *
+from server.packet import *
 
 def send_msg_to_server(sock, StringData):
     # convert string data to bytes
