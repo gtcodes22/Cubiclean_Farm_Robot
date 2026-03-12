@@ -5,8 +5,8 @@ import sys
 import os
 import socket
 import threading
-
 from datetime import datetime
+
 from sci_i2c_logger_unified import run_logger, Merge_row_dicts, Set_Headers
 import odomcsv
 
@@ -107,11 +107,13 @@ def bot_get_readings(bed_num=0, point_num=0, ):
     ####
     #######################################################################
     # send written csv files to bot_main.py script
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect(('127.0.0.1',1993))
-        s.sendall(f'{csv_path},'.encode('utf-8'))
-        s.sendall(f'{csv_path[:-4]}_odom.csv'.encode('utf-8'))
-    
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect(('127.0.0.1',1993))
+            s.sendall(f'{csv_path},'.encode('utf-8'))
+            s.sendall(f'{csv_path[:-4]}_odom.csv'.encode('utf-8'))
+    except ConnectionRefusedError:
+        print('Connection refused, is bot_main.py running?')
     
     
 def write_test_file_odom(csv_path):
