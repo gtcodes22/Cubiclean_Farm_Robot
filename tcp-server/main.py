@@ -52,7 +52,7 @@ def main():
     server_thread.daemon = True
     
     dashThread = threading.Thread(target=run_dash_app, args=(), kwargs={
-        'csv_dir':r'.\OUT',
+        'csv_dir':r'./OUT',
         'host':'0.0.0.0',
         'port':8050,
         'debug':False,
