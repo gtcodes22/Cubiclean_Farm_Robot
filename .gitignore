@@ -16,3 +16,4 @@ server/out/*
 build/*
 dist/*
 *.spec
+.python-version
