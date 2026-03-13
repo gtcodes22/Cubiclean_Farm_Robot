@@ -7,8 +7,8 @@ import socket
 import threading
 from datetime import datetime
 
-from sci_i2c_logger_unified import run_logger, Merge_row_dicts, Set_Headers
-import odomcsv
+from turtlebot_client.sci_i2c_logger_unified import run_logger, Merge_row_dicts, Set_Headers
+from turtlebot_client import odomcsv
 
 def build_sample_name(bed_num, point_num, run_timestamp):
     return f"BED{bed_num}_P{point_num}_{run_timestamp}"
@@ -26,13 +26,13 @@ def bot_get_readings(bed_num=0, point_num=0, ):
     
     # generate csv filename
     csv_name = build_sample_name(bed_num, point_num, run_timestamp)
-    CSV_Output_dir="out_test"
-    csv_path = f"{CSV_Output_dir}\\{csv_name}.csv"
+    CSV_Output_dir="bed_data"
+    csv_path = f"{CSV_Output_dir}/{csv_name}.csv"
     
     # create Odom getter thread
     odom_thread = threading.Thread(
-        target=odomcsv.main, args=(f'{csv_path[:-4]}_odom.csv'),
-        kwargs=None)
+        target=odomcsv.main, args=(),
+        kwargs={'csv_path':f'{csv_path[:-4]}_odom.csv'})
     odom_thread.name = "Rameez's Script: Odom reading getter"
     odom_thread.daemon = True
     
@@ -59,7 +59,7 @@ def bot_get_readings(bed_num=0, point_num=0, ):
             run_logger(
                 name=csv_name,
                 duration_s=30,
-                CSV_Output_dir="out",
+                CSV_Output_dir=CSV_Output_dir,
                 Sampling_Period=5.0,
                 Min_Sample_Period=5.0,
                 ADC_Channel=0,
@@ -89,9 +89,8 @@ def bot_get_readings(bed_num=0, point_num=0, ):
     ####
     #######################################################################
     # remember to chop off ".csv" file extension when appending _odom.csv
-    print(f'i: writing odom data to {csv_path[:-4]}_odom.csv')
-    
     if args.test:
+        print(f'i: writing test odom data to {csv_path[:-4]}_odom.csv')
         write_test_file_odom(f'{csv_path[:-4]}_odom.csv')
     #else:
     #    try:
