@@ -140,7 +140,7 @@ def write_test_file(csv_path):
     idx = 0
     
     # get directory from csv_path
-    CSV_Output_dir = csv_path[:csv_path.rfind('\\')]
+    CSV_Output_dir = csv_path[:csv_path.rfind('/')]
     
     print(f'writting to {CSV_Output_dir} dir')
     print(f'csv_path: {csv_path}')

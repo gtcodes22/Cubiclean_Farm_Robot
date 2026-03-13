@@ -20,7 +20,7 @@ def main(csv_path = ''):
     
     # never fail silently! makes for fustrating bug hunting
     if not client:
-        print('e: client failed to initialise')
+        print('ODOMCSV: ERROR: ROS client failed to initialise')
         return
 
     # Subscribe to odometry
