@@ -9,7 +9,7 @@ class ChatBubble extends StatelessWidget {
   final bool isSentByMe;
   final bool isBot;
 
-  ChatBubble({required this.packet}) :
+  ChatBubble({super.key, required this.packet}) :
     mType = packet.getType(),
     data = packet.getData(),
     isSentByMe = packet.getSRC() == 'APP',
