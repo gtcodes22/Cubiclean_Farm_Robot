@@ -27,4 +27,4 @@ ros2 run joy joy_node --ros-args -p dev:=/dev/input/js1 && \
 exec bash"  #use 'ls /dev/input/' to confirm if joystick is js1. If only js0 and js1 are showing, then your joystick is js1.
 
 # Terminal 5 - Teleop with PS4 Dualshock Joystick
-gnome-terminal -- bash -c "~/turtlebot3_ws/scripts/ps4_teleop.sh; exec bash"
+gnome-terminal -- bash -c "~/ros2_ws/scripts/ps4_teleop.sh; exec bash"
