@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
         
         # Window icon
         self.setWindowIcon(QIcon(r'./assets/icon.png'))
-        self.ver = '0.3.2'
+        self.ver = '0.3.3'
         # need to incorporate being able to change the ports in the interface
         self.port = 1991    
         self.broadcastPort = 1995
@@ -156,7 +156,12 @@ class MainWindow(QMainWindow):
             self.broadcast_timer.timeout.connect(self.server_broadcast)
             self.broadcast_timer.start(2000)
         else:
-            self.appDebug(f'w: could not get broadcast IP')
+            self.appDebug(f'w: could not get broadcast IP (local broadcast only)')
+            
+            # broadcast server ip timer
+            self.broadcast_timer = QTimer(self)
+            self.broadcast_timer.timeout.connect(self.server_broadcast)
+            self.broadcast_timer.start(2000)
         
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.ping_for_update)
@@ -198,6 +203,11 @@ class MainWindow(QMainWindow):
 
     # from: https://www.w3resource.com/python-exercises/pyqt/python-pyqt-connecting-signals-to-slots-exercise-11.php
     def closeEvent(self, event):
+        # if server has closed down, don't prompt user to close window
+        if not self.server.running:
+            event.accept()
+            return
+            
         # Ask for confirmation before closing
         confirmation = QMessageBox.question(self, "Confirmation", "Are you sure you want to close the application?", QMessageBox.Yes | QMessageBox.No)
 
@@ -241,6 +251,7 @@ class MainWindow(QMainWindow):
         
     @Slot()
     def close_server(self):
+        self.server.running = False
         QApplication.quit()
         
     def sendMessageApp(self):
@@ -323,12 +334,19 @@ class MainWindow(QMainWindow):
     # adapted from Source - https://stackoverflow.com/a/64067297
     # Posted by Mario Camilleri, modified by community. See post 'Timeline' for change history
     # Retrieved 2026-03-02, License - CC BY-SA 4.0
+    # broadcast ip address of server to local network, if available
     def server_broadcast(self):
         msg = bytes(f'TCP Server {self.ver}', 'utf-8')
-        
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)  # UDP
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sock.bind((self.broadcastIP,0))
+        
+        if self.broadcastIP:
+            sock.bind((self.broadcastIP,0))
+            sock.sendto(msg, ("255.255.255.255", self.broadcastPort))
+            sock.close()
+        
+        # advertise on localhost as well
+        sock.bind(('localhost',0))
         sock.sendto(msg, ("255.255.255.255", self.broadcastPort))
         sock.close()
         
@@ -364,7 +382,7 @@ class MainWindow(QMainWindow):
         
     def recieveCSVfile(self, fullFilePath, filedata):
         # get directory and filename from full file path
-        dir = fullFilePath[:fullFilePath.rfind('\\')]
+        dir = fullFilePath[:fullFilePath.rfind('/')]
         
         # if the output folder doesn't exist, create it!
         if not os.path.isdir(dir):

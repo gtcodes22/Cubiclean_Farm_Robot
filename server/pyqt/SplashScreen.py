@@ -35,7 +35,7 @@ class SplashScreen(QMainWindow):
         
         self.connectWidgets()
 
-        self.loading_steps = ["Initializing TCP Server", "Loading...", "Almost there...", "Finishing up..."]
+        self.loading_steps = ["Initializing TCP Server", "Initializing Dash Web App Server", "Almost there...", "Finishing up..."]
         self.current_step = 0
         self.ui.progressBar.setValue(0)
         #self.loading_timer = QTimer(self)

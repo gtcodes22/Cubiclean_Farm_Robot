@@ -10,6 +10,7 @@ Handles incoming TCP connections
 Main program flow (TODO)
 """
 # python library imports
+import sys
 import socket
 import threading
 import socketserver
@@ -34,6 +35,7 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         self.thread = current_thread()
         self.appSocket = None
         self.botSocket = None
+        self.running = True
         
         # run the server until it is shutdown
         try:
@@ -41,7 +43,8 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         except Exception as e:
             print(e)
             qMain.put(QueueEvent(SERVER_ERROR, ''))
-            exit()
+            self.running = False
+            sys.exit()
         
 # this is a handler class, which we define the handle method
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
@@ -85,19 +88,22 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 print(f"server: connection with {clientAddr} terminated without a proper goodbye :(")
                 if device != 'Unknown':
                     qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
-                exit()
+                self.running = False
+                sys.exit()
             except Exception as e:
                 print(f"server: connection with {clientAddr} raised {e} :(")
                 if device != 'Unknown':
                     qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
-                exit()
+                self.running = False
+                sys.exit()
                     
             # check if socket is still connected
             if pdata == '' and is_socket_closed(self.request):
                 print(f"server: connection with {clientAddr} terminated without a proper goodbye :(")
                 if device != 'Unknown':
                     qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
-                exit()
+                self.running = False
+                sys.exit()
                 
             # ignore empty packets
             if pdata == '':
@@ -157,7 +163,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                         print(f"server: connection with {clientAddr} terminated without a proper goodbye :(")
                         if device != 'Unknown':
                             qMain.put(QueueEvent(DEVICE_DISCONNECTED, device))
-                        exit()
+                        self.running = False
+                        sys.exit()
                 
                     # construct Packet object
                     packet = PacketMessage(self.client_address[0], pdata + data, length)
@@ -264,7 +271,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         if packet.data == 'EXIT':
             qMain.put(QueueEvent(DEVICE_DISCONNECTED, packet.src))
             print(f"server: ending connection with {self.client_address[0]}")
-            exit()
+            self.running = False
+            sys.exit()
             
         elif packet.data[:5] == 'SETUP':
             # let qMain know that a connection has initiated
@@ -364,7 +372,7 @@ if __name__ == "__main__":
         # if the server thread isn't created sucessfully, end the program
         if not server_thread.is_alive():
             print("main: server thread crashed")
-            exit()
+            sys.exit()
         else:
             print("main: Server loop running in thread:", server_thread.name)
         
@@ -388,4 +396,4 @@ if __name__ == "__main__":
             
         print("main: exiting program")
         server.shutdown()
-        exit()
+        sys.exit()
