@@ -49,7 +49,7 @@ class QueueWatcher(QThread):
                 if queueEvent.type == DEVICE_DISCONNECTED:
                     self.deviceDisconnected.emit(device == 'RPI')
                 if queueEvent.type == DEVICE_UPDATE:
-                    self.update_device_status(device, queueEvent.property, queueEvent.value)
+                    self.updateDeviceStatus.emit(device, queueEvent.property.lower(), queueEvent.value)
                     
                 if queueEvent.type == NET_RESPONSE:
                     msg = queueEvent.msg

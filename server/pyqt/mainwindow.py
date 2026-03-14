@@ -16,6 +16,7 @@ import struct
 import os
 import time
 import socket
+import threading
 
 # external python library imports
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QLabel
@@ -127,6 +128,11 @@ class MainWindow(QMainWindow):
         self.broadcastPort = 1995
         self.broadcastIP = None
         
+        # make sure widgets relating to connected devices are initialised
+        # to disabled
+        self.device_disconnected(True)
+        self.device_disconnected(False)
+        
         # set up a qThread to watch the queues
         """
         self.thread = QThread()
@@ -150,22 +156,18 @@ class MainWindow(QMainWindow):
         
         if self.broadcastIP:
             self.appDebug(f'broadcasting on {self.broadcastIP}')
-            
-            # broadcast server ip timer
-            self.broadcast_timer = QTimer(self)
-            self.broadcast_timer.timeout.connect(self.server_broadcast)
-            self.broadcast_timer.start(2000)
         else:
             self.appDebug(f'w: could not get broadcast IP (local broadcast only)')
             
-            # broadcast server ip timer
-            self.broadcast_timer = QTimer(self)
-            self.broadcast_timer.timeout.connect(self.server_broadcast)
-            self.broadcast_timer.start(2000)
+        # broadcast server ip timer
+        self.broadcast_timer = QTimer(self)
+        self.broadcast_timer.timeout.connect(self.server_broadcast)
+        self.broadcast_timer.start(2000)
         
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.ping_for_update)
-        #self.update_timer.start(5000)
+        self.update_timer.timeout.connect(self.update_threads)
+        self.update_timer.start(5000)
         
         # connect QueueWatcher signals
         #self.qwThread.newNetMessage.connect()
@@ -224,13 +226,19 @@ class MainWindow(QMainWindow):
         ui = self.ui
         if arg:
             ui.lineEdit_rpi.setEnabled(True)
+            ui.progressBar2.setEnabled(True)
+            ui.progressBar9.setEnabled(True)
+            ui.progressBar10.setEnabled(True)
             ui.label_BotConnectStatus.setText('✅ Device Connected')
+            ui.label_BotConnectStatus2.setText('✅ Device Connected')
             self.get_missing_csv_files()
         else:
             ui.pushButton_app_sendImg.setEnabled(True)
             ui.pushButton_app_sendDat.setEnabled(True)
             ui.lineEdit_app.setEnabled(True)
+            ui.progressBar.setEnabled(True)
             ui.label_AppConnectStatus.setText('✅ Device Connected')
+            ui.label_AppConnectStatus2.setText('✅ Device Connected')
         
         # get updates from devices
         self.ping_for_update()
@@ -240,18 +248,28 @@ class MainWindow(QMainWindow):
         ui = self.ui
         if arg:
             ui.lineEdit_rpi.setEnabled(False)
+            ui.progressBar2.setEnabled(False)
+            ui.progressBar9.setEnabled(False)
+            ui.progressBar10.setEnabled(False)
             ui.label_BotConnectStatus.setText('❌ Device Disconnected')
+            ui.label_BotConnectStatus2.setText('❌ Device Disconnected')
             self.server.botSocket = None
         else:
             ui.pushButton_app_sendImg.setEnabled(False)
             ui.pushButton_app_sendDat.setEnabled(False)
             ui.lineEdit_app.setEnabled(False)
+            ui.progressBar.setEnabled(False)
             ui.label_AppConnectStatus.setText('❌ Device Disconnected')
+            ui.label_AppConnectStatus2.setText('❌ Device Disconnected')
             self.server.appSocket = None
         
     @Slot()
     def close_server(self):
         self.server.running = False
+        if self.server.appSocket:
+            self.server.appSocket.close()
+        if self.server.botSocket:
+            self.server.botSocket.close()
         QApplication.quit()
         
     def sendMessageApp(self):
@@ -346,9 +364,11 @@ class MainWindow(QMainWindow):
             sock.close()
         
         # advertise on localhost as well
-        sock.bind(('localhost',0))
-        sock.sendto(msg, ("255.255.255.255", self.broadcastPort))
-        sock.close()
+        localSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)  # UDP
+        localSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        localSock.bind(('127.0.0.1',0))
+        localSock.sendto(msg, ("255.255.255.255", self.broadcastPort))
+        localSock.close()
         
     def ping_for_update(self):
         # disable for now
@@ -356,25 +376,31 @@ class MainWindow(QMainWindow):
         
         # if the app is connected
         if self.server.appSocket:
-            packet = sendMessage(self.ui, self.qMain, message = '/BATTERY', logIt = False)
+            packet = sendMessage(self.ui, self.qMain, message = '/BATTERY', logIt = True)
             self.server.appSocket.sendall(packet)
-            qMain.put(QueueEvent(NET_MSG, 'APP', msg = 'Getting App Status...'))
+            #self.qMain.put(QueueEvent(NET_MSG, 'APP', msg = 'Getting App Status...'))
         
         # if the turtlebot is connected
         if self.server.botSocket:
             packet = sendMessage(self.ui, self.qMain, True, message='/BATTERY', logIt = False)
             packet += sendMessage(self.ui, self.qMain, True, message='/SPEEDCM', logIt = False)
             packet += sendMessage(self.ui, self.qMain, True, message='/PROGRESS', logIt = False)
-            #self.server.botSocket.sendall(packet)
+            self.server.botSocket.sendall(packet)
             #self.qMain.put(QueueEvent(NET_RESPONSE, 'RPI', msg = 'Getting Bot Status...'))
             
     def update_device_status(self, src, prop, val):
         self.appDebug(f'i: updating_device_status')
         if src == 'APP':
             if prop == 'battery':
-               pass 
+               percentage = int(float(val))
+               self.ui.progressBar.setValue(percentage)
         elif src == 'RPI':
-            pass
+            if prop == 'battery':
+               percentage = int(float(val))
+               self.ui.progressBar_2.setValue(percentage)
+            elif prop == 'progress'
+                progress = int(float(val))
+                self.ui.progressBar_9.setValue(progress)
 
     def appDebug(self, msg):
         print(msg)
@@ -418,6 +444,14 @@ class MainWindow(QMainWindow):
             packet = sendMessage(self.ui, self.qMain, True, message = msg, logIt = False)
             self.server.botSocket.sendall(packet)
             self.qMain.put(QueueEvent(NET_RESPONSE, 'RPI', msg = 'Getting Missing CSV/LOG Files...'))
+            
+    def update_threads(self):
+        currentThreads = threading.enumerate()
+        
+        self.ui.listWidget_threads.clear()
+        
+        for thread in currentThreads:
+            self.ui.listWidget_threads.addItem(thread.name)
                 
         
 def start_ui(server, serverThread, dashThread, qMain, qThread):

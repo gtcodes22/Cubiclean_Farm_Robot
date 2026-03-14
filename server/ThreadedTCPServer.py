@@ -235,7 +235,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 
                 if len(pdata) != 0:
                     # echo whole message back to client
-                    print(f"server: echo '{pdata}' to {clientAddr}")
+                    print(f"server: echo '{pdata}'[{len(pdata)}] to {clientAddr}")
                     self.request.sendall(bytes(pdata, 'utf-8'))
                     qMain.put(QueueEvent(NET_RESPONSE, device, msg = pdata))
                 
@@ -309,17 +309,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             qMain.put(QueueEvent(NET_RESPONSE, device, msg = configStr))
         elif packet.data.upper().startswith('/BATTERY:'):
             prop = 'battery'
-            val = packet[9:]
+            val = packet.data[9:]
             qMain.put(QueueEvent(DEVICE_UPDATE, packet.src,
                 property = prop, value = val))
         elif packet.data.upper().startswith('/SPEEDCM:'):
             prop = 'speed-cm'
-            val = packet[9:]
+            val = packet.data[9:]
             qMain.put(QueueEvent(DEVICE_UPDATE, packet.src,
                 property = prop, value = val))
         elif packet.data.upper().startswith('/PROGRESS:'):
             prop = 'bed scan progress'
-            val = packet[10:]
+            val = packet.data[10:]
             qMain.put(QueueEvent(DEVICE_UPDATE, packet.src,
                 property = prop, value = val))
     
