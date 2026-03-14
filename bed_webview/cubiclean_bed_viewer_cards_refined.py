@@ -42,6 +42,7 @@ import os
 import json
 import statistics
 from datetime import datetime
+from pathlib import Path
 
 # python external library imports
 try:
@@ -1297,7 +1298,26 @@ def create_dash_app(
 
     initial_state = Build_startup_app_state(shared["Session_selector_data"])
 
-    app = Dash(__name__, suppress_callback_exceptions=True)
+
+
+
+    app_dir = path(__file__).resolve().parent
+    assest_dir = app_dir / "assets"
+
+
+    print("Dash app_dir:", app_dir)
+    print("Dash assets_dir:", assets_dir)
+    print("Assets exists:", assets_dir.exists())
+    if assets_dir.exists():
+        print("Assets files:", [p.name for p in assets_dir.iterdir()])
+
+    app = Dash(
+        __name__,
+        suppress_callback_exceptions=True,
+        assets_folder=str(assets_dir)
+    )
+    print("Dash config assets_folder:", app.config.assets_folder)
+
     app.title = "Cubiclean Bed Viewer"
 
     panel_visible_style = {
