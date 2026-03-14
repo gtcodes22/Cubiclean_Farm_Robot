@@ -1299,11 +1299,8 @@ def create_dash_app(
     initial_state = Build_startup_app_state(shared["Session_selector_data"])
 
 
-
-
-    app_dir = path(__file__).resolve().parent
-    assest_dir = app_dir / "assets"
-
+    app_dir = Path(__file__).resolve().parent
+    assets_dir = app_dir / "assets"
 
     print("Dash app_dir:", app_dir)
     print("Dash assets_dir:", assets_dir)
@@ -1317,6 +1314,8 @@ def create_dash_app(
         assets_folder=str(assets_dir)
     )
     print("Dash config assets_folder:", app.config.assets_folder)
+    
+    
 
     app.title = "Cubiclean Bed Viewer"
 
