@@ -150,11 +150,15 @@ class MainWindow(QMainWindow):
         # get broadcast server ip
         interfaces = socket.getaddrinfo(host=socket.gethostname(), port=None, family=socket.AF_INET)
         allips = [ip[-1][0] for ip in interfaces]
-
+        
+        ipList = ''
         # only broadcast on local area network
         for ip in allips:
+            ipList += f'{ip}, '
             if ip.split('.')[2] in ('0', '1'):
                 self.broadcastIP = ip
+                
+        self.ui.label_tcpaddress.setText(f'Serving TCP on {ipList[:-1]}')
         
         if self.broadcastIP:
             self.appDebug(f'broadcasting on {self.broadcastIP}')
