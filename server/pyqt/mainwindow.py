@@ -20,7 +20,6 @@ import threading
 
 # external python library imports
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QLabel
-from PySide6.QtCore import Qt, QObject, QThread, Signal, Slot, QSize, QTimer#, pyqtSignal
 from PySide6.QtGui import QPixmap, QIcon, QImage, QGuiApplication
 
 # Important:
@@ -226,9 +225,9 @@ class MainWindow(QMainWindow):
         ui = self.ui
         if arg:
             ui.lineEdit_rpi.setEnabled(True)
-            ui.progressBar2.setEnabled(True)
-            ui.progressBar9.setEnabled(True)
-            ui.progressBar10.setEnabled(True)
+            ui.progressBar_2.setEnabled(True)
+            ui.progressBar_9.setEnabled(True)
+            ui.progressBar_10.setEnabled(True)
             ui.label_BotConnectStatus.setText('✅ Device Connected')
             ui.label_BotConnectStatus2.setText('✅ Device Connected')
             self.get_missing_csv_files()
@@ -248,9 +247,9 @@ class MainWindow(QMainWindow):
         ui = self.ui
         if arg:
             ui.lineEdit_rpi.setEnabled(False)
-            ui.progressBar2.setEnabled(False)
-            ui.progressBar9.setEnabled(False)
-            ui.progressBar10.setEnabled(False)
+            ui.progressBar_2.setEnabled(False)
+            ui.progressBar_9.setEnabled(False)
+            ui.progressBar_10.setEnabled(False)
             ui.label_BotConnectStatus.setText('❌ Device Disconnected')
             ui.label_BotConnectStatus2.setText('❌ Device Disconnected')
             self.server.botSocket = None
@@ -398,7 +397,7 @@ class MainWindow(QMainWindow):
             if prop == 'battery':
                percentage = int(float(val))
                self.ui.progressBar_2.setValue(percentage)
-            elif prop == 'progress'
+            elif prop == 'progress':
                 progress = int(float(val))
                 self.ui.progressBar_9.setValue(progress)
 
