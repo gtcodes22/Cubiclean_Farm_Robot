@@ -23,6 +23,7 @@ from PySide6.QtCore import QObject, QThread, Signal#, pyqtSignal
 from server.QueueEvent import *
 
 class QueueWatcher(QThread):
+    name = 'Queue Watcher'
     newNetMessage = Signal(str, str, str)
     newCSVfile = Signal(str, str)
     serverEND = Signal()

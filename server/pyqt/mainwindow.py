@@ -21,6 +21,7 @@ import threading
 # external python library imports
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QLabel
 from PySide6.QtGui import QPixmap, QIcon, QImage, QGuiApplication
+from PySide6.QtCore import *
 
 # Important:
 # You need to run the following command to generate the ui_form.py file
@@ -143,6 +144,8 @@ class MainWindow(QMainWindow):
         self.qwThread = QueueWatcher()
         self.qwThread.setQueue(self.qMain)
         self.qwThread.start()
+        
+        self.qThreads = [self.qwThread]
         
         # get broadcast server ip
         interfaces = socket.getaddrinfo(host=socket.gethostname(), port=None, family=socket.AF_INET)
@@ -451,6 +454,9 @@ class MainWindow(QMainWindow):
         
         for thread in currentThreads:
             self.ui.listWidget_threads.addItem(thread.name)
+            
+        for qthread in self.qThreads:
+            self.ui.listWidget_threads.addItem(qthread.name)
                 
         
 def start_ui(server, serverThread, dashThread, qMain, qThread):
