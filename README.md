@@ -315,7 +315,7 @@ docker build --target bed_webview -t cubiclean_webview .
 
 - `data_logger()` in `waypoint_mission.py` is currently a stub — full chemical sensor integration is pending.
 - Battery-aware mission abort / return-to-dock not yet implemented.
-- Waypoint visualisation markers in RViz2 not yet added.
+- Waypoint visualisation markers in RViz2 do not yet auto-load.
 - An aggregated `/robot_health` topic (combining battery, speed, CPU) is planned.
-- Integration of camera and additional sensors for per-waypoint telemetry is planned.
+- Integration of an AI camera and additional sensors for per-waypoint telemetry could be considered for future development.
 - The `data_viewer` Flutter app cannot be run on a web emulator due to networking library incompatibility.
