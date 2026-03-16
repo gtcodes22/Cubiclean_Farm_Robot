@@ -10,6 +10,12 @@ from datetime import datetime
 from turtlebot_client.sci_i2c_logger_unified import run_logger, Merge_row_dicts, Set_Headers
 from turtlebot_client import odomcsv
 
+bed_num = 1
+point_num = 1
+
+# create one fixed timestamp for the whole run
+run_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+
 def build_sample_name(bed_num, point_num, run_timestamp):
     return f"BED{bed_num}_P{point_num}_{run_timestamp}"
 
@@ -18,11 +24,8 @@ def increment_bed_point(bed_num, point_num):
         return bed_num, point_num + 1
     return bed_num + 1, 1
 
-def bot_get_readings(bed_num=0, point_num=0, ):
+def bot_get_readings():#bed_num=0, point_num=0, ):
     args = parser.parse_args()
-    
-    # create one fixed timestamp for the whole run
-    run_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     
     # generate csv filename
     csv_name = build_sample_name(bed_num, point_num, run_timestamp)
@@ -43,8 +46,8 @@ def bot_get_readings(bed_num=0, point_num=0, ):
     #######################################################################
 
     # if valid bed/point numbers are not provided, go with a default of 1,1
-    bed_num = bed_num if (bed_num > 0) else 1 
-    point_num = point_num if (point_num > 0) else 1
+    #bed_num = bed_num if (bed_num > 0) else 1 
+    #point_num = point_num if (point_num > 0) else 1
 
     print(f'i: writing sensor data to {csv_path}')
     
@@ -66,6 +69,9 @@ def bot_get_readings(bed_num=0, point_num=0, ):
                 ADC_Gain=1
             )
             
+        # increment point number to 6, then restart at 1 and increment bed number
+        bed_num, point_num = increment_bed_point(bed_num, point_num)
+            
         else:
             print('i: test mode! csv will have zero values')
             
@@ -78,9 +84,6 @@ def bot_get_readings(bed_num=0, point_num=0, ):
     
         # generate a test csv
         write_test_file(csv_path)
-    
-    # increment point number to 6, then restart at 1 and increment bed number
-    bed_num, point_num = increment_bed_point(bed_num, point_num)
     
     
     #######################################################################
