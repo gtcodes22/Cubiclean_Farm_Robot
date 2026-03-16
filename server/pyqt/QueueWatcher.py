@@ -23,6 +23,7 @@ from PySide6.QtCore import QObject, QThread, Signal#, pyqtSignal
 from server.QueueEvent import *
 
 class QueueWatcher(QThread):
+    name = 'Queue Watcher'
     newNetMessage = Signal(str, str, str)
     newCSVfile = Signal(str, str)
     serverEND = Signal()
@@ -49,7 +50,7 @@ class QueueWatcher(QThread):
                 if queueEvent.type == DEVICE_DISCONNECTED:
                     self.deviceDisconnected.emit(device == 'RPI')
                 if queueEvent.type == DEVICE_UPDATE:
-                    self.update_device_status(device, queueEvent.property, queueEvent.value)
+                    self.updateDeviceStatus.emit(device, queueEvent.property.lower(), queueEvent.value)
                     
                 if queueEvent.type == NET_RESPONSE:
                     msg = queueEvent.msg

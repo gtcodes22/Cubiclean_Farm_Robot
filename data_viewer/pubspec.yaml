@@ -51,7 +51,8 @@ dev_dependencies:
   # used to automatically add build dates
   build_runner: ^2.3.3
   build: ^2.4.0
-
+  battery_plus: ^6.2.2
+  
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

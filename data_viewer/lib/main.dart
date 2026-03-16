@@ -1,3 +1,4 @@
+import 'package:data_viewer/pages/bed_list_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 //import 'dart:convert';
@@ -80,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 0:
         page = TestPage(title: 'System Status');
       case 1:
-        page = TestPage(title: 'Beds Overview');
+        page = BedListPage(title: 'Beds Overview');
       case 2:
         page = MyNetworkPage(title: 'Network Debug Function', socketService: socketService);
       case 3:

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
-
+// from: https://www.geeksforgeeks.org/flutter/flutter-battery-level-and-state/
+import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter/material.dart';
 import 'packet.dart';
 import 'dart:io';
@@ -53,8 +54,14 @@ class SocketService {
         // TODO: handle if different packets are received at once
         if (PacketMessage.bValidPacket(buffer)) {
           debugPrint("Received complete packet message");
-          messages.add(PacketMessage(buffer));
+          PacketMessage packet = PacketMessage(buffer);
+          messages.add(packet);
           newMessageNotifier?.value = true;
+
+          // if packet is a 'msg' and starts with '/', handle it as a command
+          if (packet.getType() == 'MSG' && packet.getData().startsWith('/')) {
+            handleMesssage(packet.getSRC(), packet.getData());
+          }
 
           // clear buffer for next message
           buffer = Uint8List(0);
@@ -87,7 +94,6 @@ class SocketService {
     // otherwise send it in the proper format instead
     socket?.add(plainTextMessage ? utf8.encode(plainMessage) : packet.getSocketBytes());
     socket?.flush();
-
     debugPrint("Sent network message");
     messages.add(packet);
   }
@@ -102,5 +108,27 @@ class SocketService {
   void dispose() {
     socket?.close();
     isConnected = false;
+  }
+
+  void handleMesssage(String src, String message) {
+    // handle commands sent from server
+    debugPrint("Handling message from $src: $message");
+    // get the command word after the '/' and convert it to uppercase for
+    // easier handling
+    String command = message.toUpperCase().substring(1);
+
+    switch (command) {
+      case 'BATTERY':
+        commandBattery();
+      default:
+        debugPrint("Unhandled command: $command");
+    } 
+  }
+
+  void commandBattery() async {
+    Battery battery = Battery();
+    final batteryLevel = await battery.batteryLevel;
+
+    sendMessage('/BATTERY:$batteryLevel');
   }
 }

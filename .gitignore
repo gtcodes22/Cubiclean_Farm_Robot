@@ -17,3 +17,6 @@ build/*
 dist/*
 *.spec
 .python-version
+server/main.spec
+server/pyqt/form.ui.autosave
+bed_app_data/*

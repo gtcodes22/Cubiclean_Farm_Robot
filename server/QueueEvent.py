@@ -34,7 +34,6 @@ class QueueEvent():
             self.height = kwargs['height']
             self.description = f'{device} sent config'
         elif type == DEVICE_UPDATE:
-            self.src = kwargs['src']
             self.property = kwargs['property']
             self.value = kwargs['value']
             
