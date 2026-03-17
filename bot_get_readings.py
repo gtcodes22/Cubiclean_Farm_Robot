@@ -7,7 +7,7 @@ import socket
 import threading
 from datetime import datetime
 
-from turtlebot_client.sci_i2c_logger_unified import run_logger, Merge_row_dicts, Set_Headers
+from turtlebot_client.sci_i2c_logger_unified import *#run_logger, Merge_row_dicts, Set_Headers
 from turtlebot_client import odomcsv
 
 bed_num = 1
@@ -26,6 +26,10 @@ def increment_bed_point(bed_num, point_num):
 
 def bot_get_readings():#bed_num=0, point_num=0, ):
     args = parser.parse_args()
+    
+    global bed_num
+    global point_num
+    global run_timestamp
     
     # generate csv filename
     csv_name = build_sample_name(bed_num, point_num, run_timestamp)
@@ -69,8 +73,8 @@ def bot_get_readings():#bed_num=0, point_num=0, ):
                 ADC_Gain=1
             )
             
-        # increment point number to 6, then restart at 1 and increment bed number
-        bed_num, point_num = increment_bed_point(bed_num, point_num)
+            # increment point number to 6, then restart at 1 and increment bed number
+            bed_num, point_num = increment_bed_point(bed_num, point_num)
             
         else:
             print('i: test mode! csv will have zero values')
@@ -134,6 +138,9 @@ def write_test_file_odom(csv_path):
 def write_test_file(csv_path):
     ## stolen from Brandon's script! 😈
     headers = Set_Headers()
+    #headers = [ 'p2.Temp_Air', 'p2.Humi_Air', 'p2.CO2_ppm', 'p1.NH3_ppm',
+    #            'p1.H2S_ppm', 'p3.CH4_Vout'
+    #]
     
     duration_s = 2.5
     Sampling_Period=0.5

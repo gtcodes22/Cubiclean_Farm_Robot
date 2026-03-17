@@ -171,7 +171,7 @@ class MainWindow(QMainWindow):
         self.broadcast_timer.start(2000)
         
         self.update_timer = QTimer(self)
-        self.update_timer.timeout.connect(self.ping_for_update)
+        #self.update_timer.timeout.connect(self.ping_for_update)
         self.update_timer.timeout.connect(self.update_threads)
         self.update_timer.start(5000)
         
@@ -424,6 +424,19 @@ class MainWindow(QMainWindow):
         with open(fullFilePath, "w", newline="") as f:
             f.write(filedata)
         
+        # get the final row data
+        lastRowIndex = filedata[:-1].rfind('\n')
+        lastRow = filedata[lastRowIndex:-1]
+        
+        # send bed data to Flutter app
+        try:
+            msg = f'/BEDDATA:{lastRow}'
+            packet = sendMessage(self.ui, self.qMain, isPi=False, message=msg, logIt=False)
+            self.server.appSocket.sendall(packet)
+            self.qMain.put(QueueEvent(NET_RESPONSE, 'APP', msg=msg))
+        except Exception:
+            print('server: could not send csv to Data Viewer')
+            
         self.appDebug(f'wrote csv file to {fullFilePath}')
     
     def get_missing_csv_files(self):

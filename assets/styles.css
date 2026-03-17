@@ -1,0 +1,412 @@
+﻿:root {
+    /* Colour palette */
+    --c1: #4a4e69;
+    --c2: #9a8c98;
+    --c3: #fefae0;
+    --c4: #D9AE94;
+    --c5: #faedcd;
+    --c6: #d4a373;
+    --c7: #a3b18a;
+    --c8: #588157;
+    --c9: #34a0a4;
+    --c10: #997B66;
+    /* Theme  */
+    --bg: var(--c1);
+    --bg2: var(--c2);
+    --panel: rgba(255,255,255,0.10);
+    --panel-strong: rgba(255,255,255,0.16);
+    --text: rgba(255,255,255,0.92);
+    --muted: rgba(255,255,255,0.72);
+    --border: rgba(255,255,255,0.18);
+    --shadow: 0 12px 30px rgba(0,0,0,0.22);
+    --btn: rgba(255,255,255,0.10);
+    --btn-hover: rgba(255,255,255,0.16);
+    /* Status bed colours */
+    --status-good: #7f9a7a;
+    --status-warn: #FFCB69;
+    --status-bad: #B85C4A;
+    --status-off: #faedcd;
+    /* adaptive sizing */
+    --container-max: 1200px;
+    --gap: clamp(10px, 1.2vw, 16px);
+    --pad: clamp(10px, 1.6vw, 18px);
+    --radius: clamp(14px, 1.6vw, 18px);
+    --radius-sm: clamp(12px, 1.2vw, 16px);
+    --card-min: 220px;
+    --card-ideal: 24vw;
+    --card-max: 360px;
+}
+
+* {
+    box-sizing: border-box;
+    min-width: 0; /* lets flex/grid children shrink correctly */
+}
+
+html, body {
+    min-height: 100vh;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    color: var(--text);
+    font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: radial-gradient(1100px 700px at 20% 55%, rgba(255,203,105,0.20), transparent 62%), radial-gradient(1100px 700px at 90% 60%, rgba(217,174,148,0.22), transparent 60%), radial-gradient(1200px 800px at 50% 120%, rgba(208,140,96,0.22), transparent 55%), linear-gradient(135deg, var(--bg), var(--bg2));
+    background-attachment: fixed;
+}
+
+
+#react-entry-point,
+.dash-app-content,
+._dash-loading,
+#_dash-app-content,
+#_dash-app-content > div {
+    background: transparent !important;
+}
+
+/* Titles */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text);
+}
+
+/* Container */
+.container {
+    width: min(var(--container-max), calc(100vw - 2*var(--pad)));
+    margin: 0 auto;
+    padding: var(--pad);
+}
+
+/* header stack */
+.header-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    margin-bottom: var(--gap);
+}
+
+.header-title {
+    text-align: center;
+    padding: 6px 0;
+}
+
+    .header-title h1 {
+        margin: 0;
+        font-size: clamp(18px, 2.2vw, 24px);
+        letter-spacing: .2px;
+    }
+
+    .header-title p {
+        margin: 6px 0 0 0;
+        color: var(--muted);
+        font-size: clamp(12px, 1.2vw, 13px);
+        margin-bottom: var(--gap);
+    }
+
+/* Controls row (one line with scroll if needed) */
+.controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap);
+    padding: clamp(10px, 1.2vw, 14px);
+    margin: 0 auto var(--gap) auto;
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    box-shadow: var(--shadow);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: min(100%, var(--container-max));
+}
+
+/* Pills for dropdowns */
+.pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: clamp(8px, 1vw, 12px) clamp(10px, 1.2vw, 14px);
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+    min-width: 0; /* allow shrink */
+}
+
+    .pill > .dash-dropdown {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .pill label {
+        font-size: 12px;
+        color: var(--muted);
+        white-space: nowrap;
+        flex: 0 0 auto;
+    }
+
+    /* Let session pill take most space but still shrink */
+    .pill.session-pill {
+        flex: 1 1 520px;
+        min-width: 280px;
+    }
+
+    .pill.date-pill {
+        flex: 0 0 auto;
+    }
+
+    .pill.beds-pill {
+        flex: 0 0 auto;
+    }
+
+    
+    .pill .Select-value-label,
+    .pill .Select-placeholder {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+/*  Panel  */
+.panel {
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: var(--pad);
+    max-width: 100%;
+}
+
+.panel-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap);
+    margin-bottom: var(--gap);
+}
+
+.nav {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn {
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.10);
+    color: rgba(255,255,255,0.92);
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+    .btn:hover {
+        background: rgba(255,203,105,0.16);
+        border-color: rgba(255,203,105,0.35);
+    }
+
+/* Overview grid (beds)*/
+.tile-grid {
+    display: grid;
+    gap: var(--gap);
+    padding: var(--pad);
+    grid-template-columns: repeat( auto-fit, minmax(clamp(var(--card-min), var(--card-ideal), var(--card-max)), 1fr) );
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden; /* stops the clipping */
+    padding: var(--pad);
+}
+
+/* Cards/tiles */
+.tile-card {
+    background: rgba(255,255,255,0.14) !important;
+    border: 1px solid rgba(255,255,255,0.22) !important;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    color: var(--text);
+    position: relative;
+    overflow: hidden;
+    padding-left: 18px;
+    width: 100%;
+    max-width: 100%;
+    display: block;
+    appearance: none;
+    -webkit-appearance: none;
+    text-align: left;
+    cursor: pointer;
+}
+
+    
+    .tile-card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 12px;
+        opacity: 0.95;
+        background: var(--status-off);
+        border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    }
+
+    /* Status colouring */
+    .tile-card.status-good {
+        border-color: rgba(127,154,122,0.95) !important;
+        background: rgba(127,154,122,0.28) !important;
+    }
+
+        .tile-card.status-good::before {
+            background: var(--status-good);
+        }
+
+    .tile-card.status-warn {
+        border-color: rgba(255,203,105,0.98) !important;
+        background: rgba(255,203,105,0.22) !important;
+    }
+
+        .tile-card.status-warn::before {
+            background: var(--status-warn);
+        }
+
+    .tile-card.status-bad {
+        border-color: rgba(184,92,74,0.98) !important;
+        background: rgba(184,92,74,0.24) !important;
+    }
+
+        .tile-card.status-bad::before {
+            background: var(--status-bad);
+        }
+
+    .tile-card.status-off {
+        border-color: rgba(250,237,205,0.75) !important;
+        background: rgba(250,237,205,0.18) !important;
+    }
+
+        .tile-card.status-off::before {
+            background: var(--status-off);
+        }
+
+/* Text inside cards */
+.tile-title {
+    color: var(--text) !important;
+    font-size: clamp(13px, 1.2vw, 15px);
+    font-weight: 700;
+}
+
+.tile-badge {
+    color: rgba(255,255,255,0.90) !important;
+    font-size: clamp(11px, 1vw, 13px);
+}
+
+.tile-subtitle {
+    color: var(--muted) !important;
+    font-size: clamp(11px, 1vw, 13px);
+}
+
+/* Empty blocks */
+.empty {
+    background: rgba(255,255,255,0.10) !important;
+    border: 1px dashed rgba(255,255,255,0.22) !important;
+    color: var(--muted) !important;
+    border-radius: var(--radius-sm);
+    padding: var(--pad);
+}
+
+/*Day progression (with horizontal scroll)  */
+#day-progression-panel {
+    scrollbar-gutter: stable;
+}
+
+/* Day progression cards */
+.day-card {
+    scroll-snap-align: start;
+    background: rgba(255,255,255,0.10) !important;
+    border: 1px solid rgba(255,255,255,0.18) !important;
+    box-shadow: var(--shadow);
+    color: var(--text);
+    min-width: clamp(320px, 34vw, 520px);
+    flex: 0 0 auto;
+    border-radius: var(--radius);
+    padding: var(--pad);
+}
+
+.day-title {
+    color: var(--text) !important;
+}
+
+/* Plotly graphs: keep them integrated */
+.js-plotly-plot,
+.plot-container,
+.svg-container {
+    border-radius: var(--radius);
+}
+
+/* U-turn point layout for sample locations in bed */
+.point-grid-uturn {
+    display: grid;
+    gap: var(--gap);
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+    grid-template-areas:
+        "p3 p4"
+        "p2 p5"
+        "p1 p6";
+}
+
+    .point-grid-uturn .p1 {
+        grid-area: p1;
+    }
+
+    .point-grid-uturn .p2 {
+        grid-area: p2;
+    }
+
+    .point-grid-uturn .p3 {
+        grid-area: p3;
+    }
+
+    .point-grid-uturn .p4 {
+        grid-area: p4;
+    }
+
+    .point-grid-uturn .p5 {
+        grid-area: p5;
+    }
+
+    .point-grid-uturn .p6 {
+        grid-area: p6;
+    }
+
+/*to help with small screens */
+@media (max-width: 900px) {
+    .controls {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .pill.session-pill {
+        min-width: 240px;
+    }
+}
+/* Make dropdown fill the pill */
+.pill > .dash-dropdown {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+}
+
+/* Menu only: white list with black text */
+div[role="listbox"] {
+    background: #fff !important;
+    border: 1px solid rgba(0,0,0,0.18) !important;
+    z-index: 999999 !important;
+}
+
+    div[role="listbox"] [role="option"] {
+        color: #111 !important;
+    }
+
+        div[role="listbox"] [role="option"]:hover {
+            background: rgba(0,0,0,0.06) !important;
+        }

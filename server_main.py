@@ -11,6 +11,8 @@
 # python library imports
 import sys
 import random
+from pathlib import Path
+import os
 
 # python external library imports
 try:
@@ -26,6 +28,8 @@ from server.ThreadedTCPServer import *
 from server.pyqt import mainwindow
 
 def main():
+    app_dir = Path(__file__).resolve().parent
+    
     # create two queues, one for the server thread and one for the main thread
     qMain = Queue()
     qThread = Queue()
@@ -50,7 +54,7 @@ def main():
     server_thread.daemon = True
     
     dashThread = threading.Thread(target=run_dash_app, args=(), kwargs={
-        'csv_dir':r'./bed_data',
+        'csv_dir':os.path.join(app_dir, 'bed_data'), #r'./bed_data',
         'host':'0.0.0.0',
         'port':8050,
         'debug':False,
