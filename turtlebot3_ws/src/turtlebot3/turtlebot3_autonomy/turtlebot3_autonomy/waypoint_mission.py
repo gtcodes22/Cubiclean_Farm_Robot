@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import os
 import yaml
 import time
@@ -10,6 +11,11 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator
 from ament_index_python.packages import get_package_share_directory
+
+# Add Cubiclean_Farm_Robot root to sys.path
+sys.path.insert(0, os.path.expanduser('~/Cubiclean_Farm_Robot'))
+
+import bot_get_readings  # type: ignore
 
 
 class WaypointMission(Node):
@@ -110,7 +116,7 @@ class WaypointMission(Node):
             result = self.navigator.getResult()
             self.get_logger().info(f"Waypoint {i} result: {result}")
             self.data_logger(i)
-            time.sleep(15)
+            time.sleep(30)
 
         self.get_logger().info("Mission complete")
 
